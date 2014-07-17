@@ -68,6 +68,12 @@
 			spriteC.drawBorder = true;
 			spriteD.drawBorder = true;
 
+			//睡眠
+			//spriteA.setAwakePhy(false);
+
+			//向物体物体中心施加力，单位牛
+			spriteA.applyForceToCenterPhy(40000,30000);
+
 			//渲染
 			setInterval(function(){
 				ANEngine.render(scene);

@@ -185,6 +185,37 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 			}
 		}
 
+		this.setAwakePhy = function(awake)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.SetAwake(awake);
+			}
+		}
+
+		this.applyForceToCenterPhy = function(x,y)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
+					new ANEngine.physicalEngine.Box2d.b2Vec2(body.GetPosition().x,
+						body.GetPosition().y));
+			}
+		}
+
+		this.applyForcePhy = function(x,y,px,py)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
+					new ANEngine.physicalEngine.Box2d.b2Vec2(px,
+						py));
+			}
+		}
+
 		this.setChartlet = function(_image,scut)
 		{
 			image = _image;
