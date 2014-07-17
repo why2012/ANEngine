@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<head>
+	<title>ANEngine</title>
+	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.min.js"></script>
+	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
+</head>
+
+<body>
+	<script>
+		window.onload = function(){
+			var scene = new ANEngine.Scene(document.getElementById("canvas"));
+			var layer = new ANEngine.Layer();
+			var spriteA = new ANEngine.Sprite(4,0,2,2);
+			var spriteB = new ANEngine.Sprite(3,10,30,2,.3);
+			var spriteC = new ANEngine.Sprite(8,2,4,4);
+			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
+			//设置物理皮肤
+			var phyData = {type:ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic,shape:ANEngine.physicalEngine.PhysicsAttr.Shape.Box};
+			phyData.type = ANEngine.physicalEngine.PhysicsAttr.Type.Static;
+			spriteB.setPhysics(phyData);
+			spriteD.setPhysics(phyData);
+			phyData.type = ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic;
+			phyData.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Circle;
+			spriteA.setPhysics(phyData);
+			spriteC.setPhysics(phyData);
+
+			//设置背景贴图
+			var image = new Image();
+			image.src = "assets/bird2.png";
+			image.onload = function(){
+				spriteA.setChartlet(image);
+			};
+			var image2 = new Image();
+			image2.src = "assets/bird1.png";
+			image2.onload = function(){
+				spriteC.setChartlet(image2);
+			};
+			var image3 = new Image();
+			image3.src = "assets/glass.png";
+			image3.onload = function(){
+				spriteB.setChartlet(image3);
+			};
+			var image4 = new Image();
+			image4.src = "assets/wood.png";
+			image4.onload = function(){
+				spriteD.setChartlet(image4);
+			};
+
+			//添加Sprite，图层，物理外形
+			layer.addAnimItem(spriteA);
+			layer.addAnimItem(spriteB);
+			layer.addAnimItem(spriteC);
+			layer.addAnimItem(spriteD);
+			scene.addLayer(layer);
+			spriteA.addToPhyWorld();
+			spriteB.addToPhyWorld();
+			spriteC.addToPhyWorld();
+			spriteD.addToPhyWorld();
+
+			/*spriteA.drawInCanvas(function(canvas,g)
+				{
+					g.drawPhyBorder(canvas);
+					g.drawSpriteBorder(canvas);
+				});*/
+			//画出物理边框和Sprite边框
+			spriteA.drawBorder = true;
+			spriteB.drawBorder = true;
+			spriteC.drawBorder = true;
+			spriteD.drawBorder = true;
+
+			//渲染
+			setInterval(function(){
+				ANEngine.render(scene);
+			},1000/ANEngine.fps);
+		}
+	</script>
+	<canvas id="canvas" width="1300px" height="960px">Your browser does not support the HTML5 canvas tag.</canvas>
+</body>
