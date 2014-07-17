@@ -20,6 +20,7 @@ ANEngine.render = function(scene)
 {
 	ANEngine.physicalEngine.step(scene.phyWorld,1/ANEngine.fps,ANEngine.physicalEngine.velocityIterations,
 		ANEngine.physicalEngine.positionIterations);
+	scene.phyWorld.ClearForces();
 	scene.drawScene();
 }
 
@@ -214,6 +215,19 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 					new ANEngine.physicalEngine.Box2d.b2Vec2(px,
 						py));
 			}
+		}
+
+		//如果开启了物理模拟，改变位置和角度用此函数
+		this.setTransformPhy = function(x,y,angle)
+		{
+			/*var body = this.getPhyAttr().body;
+			var Box2d = ANEngine.physicalEngine.Box2d;
+			angle = angle==undefined?0:angle;
+			if(body)
+			{console.log(body.SetTransform);
+				body.SetTransform(new Box2d.b2Transform(
+					new Box2d.b2Vec2(x,y),angle));
+			}*/
 		}
 
 		this.setChartlet = function(_image,scut)
@@ -461,6 +475,7 @@ ANEngine.physicalEngine.Box2d = {
     b2CircleShape:Box2D.Collision.Shapes.b2CircleShape,
     b2DebugDraw:Box2D.Dynamics.b2DebugDraw,
     b2MouseJointDef:Box2D.Dynamics.Joints.b2MouseJointDef,
+    b2Transform:Box2D.Common.Math.b2Transform,
 };
 
 ANEngine.physicalEngine.PhysicsAttr = {

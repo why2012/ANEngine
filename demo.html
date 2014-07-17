@@ -71,11 +71,13 @@
 			//睡眠
 			//spriteA.setAwakePhy(false);
 
-			//向物体物体中心施加力，单位牛
-			spriteA.applyForceToCenterPhy(40000,30000);
+			//移动物体
+			//spriteC.setTransformPhy(6,10);
 
 			//渲染
 			setInterval(function(){
+				//向物体物体中心施加力，单位牛
+				spriteA.applyForceToCenterPhy(40000,30000);
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}
