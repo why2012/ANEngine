@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head>
 	<title>ANEngine</title>
-	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.min.js"></script>
+	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.js"></script>
 	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
 </head>
 
@@ -10,19 +10,21 @@
 		window.onload = function(){
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
-			var spriteA = new ANEngine.Sprite(4,0,2,2);
-			var spriteB = new ANEngine.Sprite(3,10,30,2,.3);
+			var spriteA = new ANEngine.Sprite(4,2,2,2);
+			var spriteB = new ANEngine.Sprite(3,12,30,2,.3);
 			var spriteC = new ANEngine.Sprite(8,2,4,4);
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
+			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			//设置物理皮肤
 			var phyData = {type:ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic,shape:ANEngine.physicalEngine.PhysicsAttr.Shape.Box};
 			phyData.type = ANEngine.physicalEngine.PhysicsAttr.Type.Static;
-			spriteB.setPhysics(phyData);
-			spriteD.setPhysics(phyData);
+			spriteB.physicalSkin.setPhysics(phyData);
+			spriteD.physicalSkin.setPhysics(phyData);
 			phyData.type = ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic;
 			phyData.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Circle;
-			spriteA.setPhysics(phyData);
-			spriteC.setPhysics(phyData);
+			spriteA.physicalSkin.setPhysics(phyData);
+			spriteC.physicalSkin.setPhysics(phyData);
+			spriteE.physicalSkin.setPhysics(phyData);
 
 			//设置背景贴图
 			var image = new Image();
@@ -45,17 +47,24 @@
 			image4.onload = function(){
 				spriteD.setChartlet(image4);
 			};
+			var image5 = new Image();
+			image5.src = "assets/bird3.png";
+			image5.onload = function(){
+				spriteE.setChartlet(image5);
+			};
 
 			//添加Sprite，图层，物理外形
 			layer.addAnimItem(spriteA);
 			layer.addAnimItem(spriteB);
 			layer.addAnimItem(spriteC);
 			layer.addAnimItem(spriteD);
+			layer.addAnimItem(spriteE);
 			scene.addLayer(layer);
-			spriteA.addToPhyWorld();
-			spriteB.addToPhyWorld();
-			spriteC.addToPhyWorld();
-			spriteD.addToPhyWorld();
+			spriteA.physicalSkin.addToPhyWorld();
+			spriteB.physicalSkin.addToPhyWorld();
+			spriteC.physicalSkin.addToPhyWorld();
+			spriteD.physicalSkin.addToPhyWorld();
+			spriteE.physicalSkin.addToPhyWorld();
 
 			/*spriteA.drawInCanvas(function(canvas,g)
 				{
@@ -67,17 +76,23 @@
 			spriteB.drawBorder = true;
 			spriteC.drawBorder = true;
 			spriteD.drawBorder = true;
+			spriteE.drawBorder = true;
 
 			//睡眠
 			//spriteA.setAwakePhy(false);
-
+			//var px=0,py=0;
 			//移动物体
-			//spriteC.setTransformPhy(6,10);
+			//spriteC.physicalSkin.setTransformPhy(px,py);px+=.02;py+=.01;
+			//移动物体 Joint Transform
+			//spriteE.physicalSkin.setJointTransform(80,20);
 
+			//鼠标控制
+			var baseController = new ANEngine.physicalEngine.BaseController(document.getElementById("canvas"),scene.phyWorld);
 			//渲染
 			setInterval(function(){
 				//向物体物体中心施加力，单位牛
-				spriteA.applyForceToCenterPhy(40000,30000);
+				spriteA.physicalSkin.applyForceToCenterPhy(40000,30000);
+				baseController.update();
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}

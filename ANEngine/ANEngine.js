@@ -37,6 +37,7 @@ ANEngine.Scene = function(_canvas)
 		{
 			layer.setPhyWorld(this.phyWorld);
 			layers.push(layer);
+			layer.scene = this;
 		}
 
 		//场景绘制
@@ -62,6 +63,7 @@ ANEngine.Layer = function()
 		*/
 		var animItemPool = new Array();
 		var phyWorld = null;
+		this.scene = null;
 
 		this.setPhyWorld = function(world)
 		{
@@ -130,105 +132,9 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 		var height = _height;
 		var rotate = _rotate==undefined?0:_rotate;//旋转弧度
 		var func = null;//canvas绘图回调
-		var enabledPhy = false;
-		this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
 		this.layer = null;
-
-		/*
-			若Sprite的物理外形为圆，
-			IN：Sprite在圆内，四角与圆相接
-			OUT：圆在Sprite内，圆与Sprite相切
-		*/
-		var phyAttr = {};
-
-		phyAttr.type = ANEngine.physicalEngine.PhysicsAttr.Type.Static;
-		phyAttr.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Box;
-		phyAttr.density = 50;
-		phyAttr.friction = .5;
-		phyAttr.restitution = .3;
-		phyAttr.bodyDef = null;
-		phyAttr.body = null;
-		phyAttr.fixture = null;
-		phyAttr.circleAlign = ANEngine.physicalEngine.PhysicsAttr.CircleAlign.OUT;
-
-		this.getPhyAttr = function()
-		{
-			return phyAttr;
-		}
-
-		//在layer被添加进场景后此函数才有效
-		this.addToPhyWorld = function()
-		{
-			if(this.layer!=null)
-			{
-				this.layer.addAnimItemPhy(this);
-				enabledPhy = true;
-			}
-		}
-
-		//在layer被添加进场景后此函数才有效
-		this.updatePhy = function()
-		{
-			if(this.layer!=null)
-			{
-				this.layer.updateAnimItemPhy(this);
-				enabledPhy = true;
-			}
-		}
-
-		//在layer被添加进场景后此函数才有效
-		this.destroyPhy = function()
-		{
-			if(this.layer!=null)
-			{
-				this.layer.destroyAnimItemPhy(this);
-				enabledPhy = false;
-			}
-		}
-
-		this.setAwakePhy = function(awake)
-		{
-			var body = this.getPhyAttr().body;
-			if(body)
-			{
-				body.SetAwake(awake);
-			}
-		}
-
-		this.applyForceToCenterPhy = function(x,y)
-		{
-			var body = this.getPhyAttr().body;
-			if(body)
-			{
-				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
-					new ANEngine.physicalEngine.Box2d.b2Vec2(body.GetPosition().x,
-						body.GetPosition().y));
-			}
-		}
-
-		this.applyForcePhy = function(x,y,px,py)
-		{
-			var body = this.getPhyAttr().body;
-			if(body)
-			{
-				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
-					new ANEngine.physicalEngine.Box2d.b2Vec2(px,
-						py));
-			}
-		}
-
-		//如果开启了物理模拟，改变位置和角度用此函数
-		this.setTransformPhy = function(x,y,angle)
-		{
-			/*var body = this.getPhyAttr().body;
-			var Box2d = ANEngine.physicalEngine.Box2d;
-			angle = angle==undefined?0:angle;
-			if(body)
-			{console.log(body.SetTransform);
-				body.SetTransform(new Box2d.b2Transform(
-					new Box2d.b2Vec2(x,y),angle));
-			}*/
-		}
+		this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
+		this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
 
 		this.setChartlet = function(_image,scut)
 		{
@@ -335,24 +241,27 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 			canvas.strokeStyle = "#ff0000";
 			var sprite = _sprite||this;
 			var drawScale = ANEngine.drawScale;
-			var body = sprite.getPhyAttr().body;
-			if(sprite.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Box)
+			var body = sprite.physicalSkin.getPhyAttr().body;
+			if(body)
 			{
-				var localVertices = body.GetFixtureList().GetShape().GetVertices();
-				var vertices = Array(localVertices.length);
-				var xf = body.m_xf;
-				for(var i in localVertices)
+				if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Box)
 				{
-					vertices[i] = localVertices[i];
-					vertices[i] = Box2D.Common.Math.b2Math.MulX(xf, vertices[i]);
+					var localVertices = body.GetFixtureList().GetShape().GetVertices();
+					var vertices = Array(localVertices.length);
+					var xf = body.m_xf;
+					for(var i in localVertices)
+					{
+						vertices[i] = localVertices[i];
+						vertices[i] = Box2D.Common.Math.b2Math.MulX(xf, vertices[i]);
+					}
+					sprite.canvasDraw(canvas,vertices);
 				}
-				sprite.canvasDraw(canvas,vertices);
-			}
-			else if(sprite.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Circle)
-			{
-				radius = body.GetFixtureList().GetShape().m_radius;
-				var center = Box2D.Common.Math.b2Math.MulX(body.m_xf,body.GetFixtureList().GetShape().m_p);
-				sprite.canvasDrawCircle(canvas,radius,center);
+				else if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Circle)
+				{
+					radius = body.GetFixtureList().GetShape().m_radius;
+					var center = Box2D.Common.Math.b2Math.MulX(body.m_xf,body.GetFixtureList().GetShape().m_p);
+					sprite.canvasDrawCircle(canvas,radius,center);
+				}
 			}
 			canvas.restore();
 		}
@@ -377,7 +286,8 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 
 		this.draw = function(canvas)
 		{
-			if(enabledPhy&&phyAttr.body!=null)
+			var phyAttr = this.physicalSkin.getPhyAttr();
+			if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 			{
 				this.x(phyAttr.body.GetPosition().x-this.width()/2);
 				this.y(phyAttr.body.GetPosition().y-this.height()/2);
@@ -408,6 +318,158 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 			}
 			canvas.restore();
 		}
+}
+
+/*
+	针对box2d进行封装
+*/
+ANEngine.physicalEngine.Box2d = {
+	b2World:Box2D.Dynamics.b2World,
+	b2Vec2:Box2D.Common.Math.b2Vec2,
+	b2AABB:Box2D.Collision.b2AABB,
+    b2BodyDef:Box2D.Dynamics.b2BodyDef,
+    b2Body:Box2D.Dynamics.b2Body,
+    b2FixtureDef:Box2D.Dynamics.b2FixtureDef,
+    b2Fixture:Box2D.Dynamics.b2Fixture,
+    b2MassData:Box2D.Collision.Shapes.b2MassData,
+    b2PolygonShape:Box2D.Collision.Shapes.b2PolygonShape,
+    b2CircleShape:Box2D.Collision.Shapes.b2CircleShape,
+    b2DebugDraw:Box2D.Dynamics.b2DebugDraw,
+    b2MouseJointDef:Box2D.Dynamics.Joints.b2MouseJointDef,
+    b2Transform:Box2D.Common.Math.b2Transform,
+    b2Mat22:Box2D.Common.Math.b2Mat22,
+};
+
+ANEngine.physicalEngine.PhysicsAttr = {
+	Type:{Static:ANEngine.physicalEngine.Box2d.b2Body.b2_staticBody,Dynamic:ANEngine.physicalEngine.Box2d.b2Body.b2_dynamicBody},
+	Shape:{Box:"Box",Circle:"Circle"},
+	CircleAlign:{IN:"IN",OUT:"OUT"},
+};
+
+//AnimItem的物理属性
+ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
+{
+		var _this = _sprite;
+		var enabledPhy = false;
+		/*
+			若Sprite的物理外形为圆，
+			IN：Sprite在圆内，四角与圆相接
+			OUT：圆在Sprite内，圆与Sprite相切
+		*/
+		var phyAttr = {};
+
+		phyAttr.type = ANEngine.physicalEngine.PhysicsAttr.Type.Static;
+		phyAttr.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Box;
+		phyAttr.density = 50;
+		phyAttr.friction = .5;
+		phyAttr.restitution = .3;
+		phyAttr.bodyDef = null;
+		phyAttr.body = null;
+		phyAttr.fixture = null;
+		phyAttr.circleAlign = ANEngine.physicalEngine.PhysicsAttr.CircleAlign.OUT;
+
+		this.getPhyAttr = function()
+		{
+			return phyAttr;
+		}
+
+		this.EnabledPhy = function()
+		{
+			return enabledPhy;
+		}
+
+		//在layer被添加进场景后此函数才有效
+		this.addToPhyWorld = function()
+		{
+			if(_this.layer!=null)
+			{
+				_this.layer.addAnimItemPhy(this);
+				enabledPhy = true;
+			}
+		}
+
+		//在layer被添加进场景后此函数才有效
+		this.updatePhy = function()
+		{
+			if(_this.layer!=null)
+			{
+				_this.layer.updateAnimItemPhy(this);
+				enabledPhy = true;
+			}
+		}
+
+		//在layer被添加进场景后此函数才有效
+		this.destroyPhy = function()
+		{
+			if(_this.layer!=null)
+			{
+				_this.layer.destroyAnimItemPhy(this);
+				enabledPhy = false;
+			}
+		}
+
+		this.setAwakePhy = function(awake)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.SetAwake(awake);
+			}
+		}
+
+		this.applyForceToCenterPhy = function(x,y)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
+					new ANEngine.physicalEngine.Box2d.b2Vec2(body.GetPosition().x,
+						body.GetPosition().y));
+			}
+		}
+
+		this.applyForcePhy = function(x,y,px,py)
+		{
+			var body = this.getPhyAttr().body;
+			if(body)
+			{
+				body.ApplyForce(new ANEngine.physicalEngine.Box2d.b2Vec2(x,y),
+					new ANEngine.physicalEngine.Box2d.b2Vec2(px,
+						py));
+			}
+		}
+
+		//如果开启了物理模拟，改变位置和角度用此函数
+		this.setTransformPhy = function(x,y,angle)
+		{
+			var body = this.getPhyAttr().body;
+			var Box2d = ANEngine.physicalEngine.Box2d;
+			angle = angle==undefined?0:angle;
+			if(body)
+			{
+				_this.x(x);
+				_this.y(y);
+				_this.rotate(angle);
+				body.SetTransform(new ANEngine.physicalEngine.NormalPA(x,y,angle));
+			}
+		}
+
+		//Joint Transform
+		this.setJointTransform = function(x,y,force)
+		{
+			if(phyAttr.body)
+			{
+				force = force||300.0;
+				var md = new ANEngine.physicalEngine.Box2d.b2MouseJointDef();
+            	md.bodyA = _this.layer.scene.phyWorld.GetGroundBody();
+            	md.bodyB = phyAttr.body;
+            	md.target.Set(x, y);
+            	md.collideConnected = true;
+            	md.maxForce = force * phyAttr.body.GetMass();
+            	mouseJoint = _this.layer.scene.phyWorld.CreateJoint(md);
+            	phyAttr.body.SetAwake(true);
+        	}
+		}
 
 		//需要在添加物理外形前调用
 		this.setPhysics = function(phyData)
@@ -420,8 +482,9 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 			var density = phyData.density;
 			var friction = phyData.friction;
 			var restitution = phyData.restitution;
-			var angle = rotate;
-
+			var angle = _this.rotate();
+			var x = _this.x(),y = _this.y(),width = _this.width(),height = _this.height();
+			//console.log(x+","+y+","+width+","+height+","+angle);
 			phyAttr.shape = shape||phyAttr.shape;
 			phyAttr.type = type||phyAttr.type;
 			phyAttr.density = density||phyAttr.density;
@@ -447,7 +510,7 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 				var radius = 0;
 				if(phyAttr.circleAlign==ANEngine.physicalEngine.PhysicsAttr.CircleAlign.IN)
 				{
-					radius = Math.sqrt(width*width+height*height)/2
+					radius = Math.sqrt(width*width+height*height)/2;
 				}
 				else if(phyAttr.circleAlign==ANEngine.physicalEngine.PhysicsAttr.CircleAlign.OUT)
 				{
@@ -458,31 +521,6 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 			}
 		}
 }
-
-/*
-	针对box2d进行封装
-*/
-ANEngine.physicalEngine.Box2d = {
-	b2World:Box2D.Dynamics.b2World,
-	b2Vec2:Box2D.Common.Math.b2Vec2,
-	b2AABB:Box2D.Collision.b2AABB,
-    b2BodyDef:Box2D.Dynamics.b2BodyDef,
-    b2Body:Box2D.Dynamics.b2Body,
-    b2FixtureDef:Box2D.Dynamics.b2FixtureDef,
-    b2Fixture:Box2D.Dynamics.b2Fixture,
-    b2MassData:Box2D.Collision.Shapes.b2MassData,
-    b2PolygonShape:Box2D.Collision.Shapes.b2PolygonShape,
-    b2CircleShape:Box2D.Collision.Shapes.b2CircleShape,
-    b2DebugDraw:Box2D.Dynamics.b2DebugDraw,
-    b2MouseJointDef:Box2D.Dynamics.Joints.b2MouseJointDef,
-    b2Transform:Box2D.Common.Math.b2Transform,
-};
-
-ANEngine.physicalEngine.PhysicsAttr = {
-	Type:{Static:ANEngine.physicalEngine.Box2d.b2Body.b2_staticBody,Dynamic:ANEngine.physicalEngine.Box2d.b2Body.b2_dynamicBody},
-	Shape:{Box:"Box",Circle:"Circle"},
-	CircleAlign:{IN:"IN",OUT:"OUT"},
-};
 
 ANEngine.physicalEngine.createWorld = function(direcX,direcY)
 {
@@ -496,4 +534,132 @@ ANEngine.physicalEngine.step = function(world,timeStep,velocityIterations,positi
 	positionIterations = positionIterations||10;
 
 	world.Step(timeStep,velocityIterations,positionIterations);
+}
+
+//Box2d物体位置描述对象
+ANEngine.physicalEngine.NormalPA = function(x,y,angle)
+{
+	this.position = {x:x,y:y};
+	this.angle = angle;
+
+	this.GetAngle = function()
+	{
+		return this.angle;
+	}
+}
+
+//一个点击拖拽控制器，调用update更新
+ANEngine.physicalEngine.BaseController = function(canvas,world)
+{
+	var mouseX, mouseY,mousePVec, isMouseDown, selectedBody, mouseJoint;
+	var canvasPosition = getElementPosition(canvas);
+	document.addEventListener("mousedown", function(e) {
+        isMouseDown = true;
+        handleMouseMove(e);
+        document.addEventListener("mousemove", handleMouseMove, true);
+    }, true);
+
+    document.addEventListener("mouseup", function() {
+        document.removeEventListener("mousemove", handleMouseMove, true);
+        isMouseDown = false;
+        mouseX = undefined;
+        mouseY = undefined;
+    }, true);
+
+	function handleMouseMove(e) {
+		var scrollTopLeft = getScrollTopLeft();
+        var clientX = e.clientX + scrollTopLeft.Left;
+        var clientY = e.clientY + scrollTopLeft.Top;
+        mouseX = (clientX - canvasPosition.x) / 30;
+        mouseY = (clientY - canvasPosition.y) / 30;
+        //console.log(mouseX+","+mouseY);
+    };
+
+    function getElementPosition(element) {
+        var elem=element, tagname="", x=0, y=0;
+           
+        while((typeof(elem) == "object") && (typeof(elem.tagName) != "undefined")) {
+            y += elem.offsetTop;
+            x += elem.offsetLeft;
+            tagname = elem.tagName.toUpperCase();
+
+            if(tagname == "BODY")
+                elem=0;
+
+            if(typeof(elem) == "object") {
+                if(typeof(elem.offsetParent) == "object")
+                    elem = elem.offsetParent;
+               	}
+        }
+        
+        return {x: x, y: y};
+    }
+
+    function getScrollTopLeft() 
+    { 
+    	var scrollPos={}; 
+    	if (typeof window.pageYOffset != undefined) { 
+        	scrollPos.Top = window.pageYOffset;
+        	scrollPos.Left = window.pageXOffset;
+    	} 
+    	else if (typeof document.compatMode != undefined
+    	 && document.compatMode != 'BackCompat') { 
+        	scrollPos.Top = document.documentElement.scrollTop; 
+        	scrollPos.Left = document.documentElement.scrollLeft; 
+    	} 
+    	else if (typeof document.body != undefined) { 
+        	scrollPos.Top = document.body.scrollTop; 
+        	scrollPos.Left = document.body.scrollLeft; 
+    	} 
+    	return scrollPos; 
+	}
+
+    function getBodyAtMouse() {
+        mousePVec = new ANEngine.physicalEngine.Box2d.b2Vec2(mouseX, mouseY);
+        var aabb = new ANEngine.physicalEngine.Box2d.b2AABB();
+        aabb.lowerBound.Set(mouseX - 0.001, mouseY - 0.001);
+        aabb.upperBound.Set(mouseX + 0.001, mouseY + 0.001);
+            
+        // Query the world for overlapping shapes.
+
+        selectedBody = null;
+        world.QueryAABB(getBodyCB, aabb);
+        return selectedBody;
+    }
+
+    function getBodyCB(fixture) {
+        if(fixture.GetBody().GetType() != ANEngine.physicalEngine.Box2d.b2Body.b2_staticBody) {
+            if(fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec))
+            {
+                selectedBody = fixture.GetBody();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    this.update = function() {
+        if(isMouseDown && (!mouseJoint)) {
+            var body = getBodyAtMouse();
+            if(body) {
+                var md = new ANEngine.physicalEngine.Box2d.b2MouseJointDef();
+                md.bodyA = world.GetGroundBody();
+                md.bodyB = body;
+                md.target.Set(mouseX, mouseY);
+                md.collideConnected = true;
+                md.maxForce = 300.0 * body.GetMass();
+                mouseJoint = world.CreateJoint(md);
+                body.SetAwake(true);
+            }
+        }
+            
+        if(mouseJoint) {
+            if(isMouseDown) {
+                mouseJoint.SetTarget(new ANEngine.physicalEngine.Box2d.b2Vec2(mouseX, mouseY));
+            } else {
+                world.DestroyJoint(mouseJoint);
+                mouseJoint = null;
+            }
+        }
+    }
 }
