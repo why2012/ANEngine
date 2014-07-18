@@ -77,6 +77,19 @@ ANEngine.Layer = function()
 			animItem.layer = this;
 		}
 
+		//移除元素
+		this.removeAnimItem = function(animItem)
+		{
+			var index = animItemPool.indexOf(animItem);
+			if(index!=-1)
+			{
+				animItemPool.splice(index,1);
+				return animItem;
+			}
+
+			return null;
+		}
+
 		//添加可视元素的物理外形
 		this.addAnimItemPhy = function(animItem)
 		{
@@ -120,204 +133,242 @@ ANEngine.Layer = function()
 		}
 }
 
+//可视元素基类
+ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
+{
+	var x = _x;
+	var y = _y;
+	var pivotX = _width/2;//旋转轴心
+	var pivotY = _height/2;
+	var width = _width;
+	var height = _height;
+	var rotate = _rotate==undefined?0:_rotate;//旋转弧度
+	var alpha = 1;
+	var blend = "source_over";
+	this.func = null;
+	this.layer = null;
+	this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
+
+	this.x = function(_x)
+	{
+		x = _x||x;
+		x = x==undefined?0:x;
+		return x;
+	}
+
+	this.y = function(_y)
+	{
+		y = _y||y;
+		y = y==undefined?0:y;
+		return y;
+	}
+
+	this.width = function(_width)
+	{
+		width = _width||width;
+		width = width==undefined?0:width;
+		pivotX = width/2;
+		return width;
+	}
+
+	this.height = function(_height)
+	{
+		height = _height||height;
+		height = height==undefined?0:height;
+		pivotY = height/2;
+		return height;
+	}
+
+	this.pivotX = function(_pivotX)
+	{
+		pivotX = _pivotX||pivotX;
+		pivotX = pivotX==undefined?0:pivotX;
+		return pivotX;
+	}
+
+	this.pivotY = function(_pivotY)
+	{
+		pivotY = _pivotY||pivotY;
+		pivotY = pivotY==undefined?0:pivotY;
+		return pivotY;
+	}
+
+	this.rotate = function(_rotate)
+	{
+		rotate = _rotate||rotate;
+		rotate = rotate==undefined?0:rotate;
+		return rotate;
+	}
+
+	this.alpha = function(_alpha)
+	{
+		alpha = _alpha||alpha;
+		alpha = alpha==undefined?1:alpha;
+		return alpha;
+	}
+
+	this.blend = function(_blend)
+	{
+		blend = _blend||blend;
+		blend = blend==undefined?1:blend;
+		return blend;
+	}
+
+	this.canvasDraw = function(canvas,vertices)
+	{
+		var drawScale = ANEngine.drawScale;
+		canvas.beginPath();
+		canvas.moveTo(vertices[0].x*drawScale,vertices[0].y*drawScale);
+		for(var i=1;i<vertices.length;i++)
+		{
+			canvas.lineTo(vertices[i].x*drawScale,vertices[i].y*drawScale);
+		}
+		canvas.lineTo(vertices[0].x*drawScale,vertices[0].y*drawScale);
+		canvas.stroke();
+	}
+
+	this.canvasDrawCircle = function(canvas,radius,center)
+	{
+		var drawScale = ANEngine.drawScale;
+		cx = center.x * drawScale,
+        cy = center.y * drawScale;
+      	canvas.moveTo(0, 0);
+      	canvas.beginPath();
+      	canvas.arc(cx, cy, radius * drawScale, 0, Math.PI * 2, true);
+      	canvas.closePath();
+      	canvas.stroke();
+	}
+
+	//红色
+	this.drawPhyBorder = function(canvas,_sprite)
+	{
+		canvas.save();
+		var drawScale = ANEngine.drawScale;
+		var x=this.x()*drawScale,y=this.y()*drawScale,pivotX=this.pivotX()*drawScale,
+		pivotY=this.pivotY()*drawScale,width=this.width()*drawScale,height=this.height()*drawScale;
+		var translateX = x+pivotX,translateY = y+pivotY;
+		//应用位移和旋转
+		canvas.translate(translateX,translateY);
+		canvas.rotate(-rotate);
+		canvas.translate(-translateX,-translateY);
+
+		canvas.strokeStyle = "#ff0000";
+		var sprite = _sprite||this;
+		var drawScale = ANEngine.drawScale;
+		var body = sprite.physicalSkin.getPhyAttr().body;
+		if(body)
+		{
+			if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Box)
+			{
+				var localVertices = body.GetFixtureList().GetShape().GetVertices();
+				var vertices = Array(localVertices.length);
+				var xf = body.m_xf;
+				for(var i in localVertices)
+				{
+					vertices[i] = localVertices[i];
+					vertices[i] = Box2D.Common.Math.b2Math.MulX(xf, vertices[i]);
+				}
+				sprite.canvasDraw(canvas,vertices);
+			}
+			else if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Circle)
+			{
+				radius = body.GetFixtureList().GetShape().m_radius;
+				var center = Box2D.Common.Math.b2Math.MulX(body.m_xf,body.GetFixtureList().GetShape().m_p);
+				sprite.canvasDrawCircle(canvas,radius,center);
+			}
+		}
+		canvas.restore();
+	}
+
+	//蓝色
+	this.drawSelfBorder = function(canvas,_sprite)
+	{
+		canvas.save();
+		canvas.strokeStyle = "#0000ff";
+		var sprite = _sprite||this;
+		var drawScale = ANEngine.drawScale;
+		canvas.beginPath();
+		canvas.moveTo(sprite.x()*drawScale,sprite.y()*drawScale);
+		canvas.lineTo((sprite.width()+sprite.x())*drawScale,sprite.y()*drawScale);
+		canvas.lineTo((sprite.width()+sprite.x())*drawScale,(sprite.height()+sprite.y())*drawScale);
+		canvas.lineTo(sprite.x()*drawScale,(sprite.height()+sprite.y())*drawScale);
+		canvas.lineTo(sprite.x()*drawScale,sprite.y()*drawScale);
+		canvas.closePath();
+		canvas.stroke();
+		canvas.restore();	
+	}
+
+	this.preDraw = function(canvas)
+	{
+		var drawScale = ANEngine.drawScale;
+		//计算像素单位
+		var _x=x*drawScale,_y=y*drawScale,_pivotX=pivotX*drawScale,
+		_pivotY=pivotY*drawScale,_width=width*drawScale,_height=height*drawScale;
+		var translateX = _x+_pivotX,translateY = _y+_pivotY;
+		//应用位移和旋转
+		canvas.translate(translateX,translateY);
+		canvas.rotate(this.rotate());
+		canvas.translate(-translateX,-translateY);
+		if(this.func!=null)
+			this.func(canvas,this);
+		if(this.drawBorder)
+		{
+			this.drawPhyBorder(canvas);
+			this.drawSelfBorder(canvas);
+		}
+		//设置透明度
+		canvas.globalAlpha = alpha;
+		//设置混色
+		canvas.globalCompositeOperation = blend;
+	}
+
+	this.draw = function(canvas){}
+}
+
 ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 {
-		var image = null;//贴图,加载完后调用setChartlet()设置
-		var imageCut = {use:false,sx:0,sy:0,swidth:0,sheight:0};
-		var x = _x;
-		var y = _y;
-		var pivotX = _width/2;//旋转轴心
-		var pivotY = _height/2;
-		var width = _width;
-		var height = _height;
-		var rotate = _rotate==undefined?0:_rotate;//旋转弧度
-		var func = null;//canvas绘图回调
-		this.layer = null;
-		this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
-		this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
 
-		this.setChartlet = function(_image,scut)
+	var image = null;//贴图,加载完后调用setChartlet()设置
+	var imageCut = {use:false,sx:0,sy:0,swidth:0,sheight:0};
+	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+
+	this.setChartlet = function(_image,scut)
+	{
+		image = _image;
+		if(scut)
+			scut.use = true;
+		imageCut = scut||imageCut;
+	}
+
+	this.draw = function(canvas)
+	{
+		var phyAttr = this.physicalSkin.getPhyAttr();
+		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 		{
-			image = _image;
-			if(scut)
-				scut.use = true;
-			imageCut = scut||imageCut;
+			this.x(phyAttr.body.GetPosition().x-this.width()/2);
+			this.y(phyAttr.body.GetPosition().y-this.height()/2);
+			this.rotate(phyAttr.body.GetAngle());
 		}
-
-		this.x = function(_x)
+		canvas.save();
+		this.preDraw(canvas);//调用基类的预处理
+		if(image!=null)
 		{
-			x = _x||x;
-			x = x==undefined?0:x;
-			return x;
+			if(imageCut.use)
+				canvas.drawImage(image,imageCut.sx,imageCut.sy,imageCut.swidth,imageCut.sheight,
+					this.x()*ANEngine.drawScale,
+					this.y()*ANEngine.drawScale,
+					this.width()*ANEngine.drawScale,
+					this.height()*ANEngine.drawScale);
+			else
+				canvas.drawImage(image,
+					this.x()*ANEngine.drawScale,
+					this.y()*ANEngine.drawScale,
+					this.width()*ANEngine.drawScale,
+					this.height()*ANEngine.drawScale);
 		}
-
-		this.y = function(_y)
-		{
-			y = _y||y;
-			y = y==undefined?0:y;
-			return y;
-		}
-
-		this.width = function(_width)
-		{
-			width = _width||width;
-			width = width==undefined?0:width;
-			pivotX = width/2;
-			return width;
-		}
-
-		this.height = function(_height)
-		{
-			height = _height||height;
-			height = height==undefined?0:height;
-			pivotY = height/2;
-			return height;
-		}
-
-		this.pivotX = function(_pivotX)
-		{
-			pivotX = _pivotX||pivotX;
-			pivotX = pivotX==undefined?0:pivotX;
-			return pivotX;
-		}
-
-		this.pivotY = function(_pivotY)
-		{
-			pivotY = _pivotY||pivotY;
-			pivotY = pivotY==undefined?0:pivotY;
-			return pivotY;
-		}
-
-		this.rotate = function(_rotate)
-		{
-			rotate = _rotate||rotate;
-			rotate = rotate==undefined?0:rotate;
-			return rotate;
-		}
-
-		this.drawInCanvas = function(_func)
-		{
-			func = _func;
-		}
-
-		this.canvasDraw = function(canvas,vertices)
-		{
-			var drawScale = ANEngine.drawScale;
-			canvas.beginPath();
-			canvas.moveTo(vertices[0].x*drawScale,vertices[0].y*drawScale);
-			for(var i=1;i<vertices.length;i++)
-			{
-				canvas.lineTo(vertices[i].x*drawScale,vertices[i].y*drawScale);
-			}
-			canvas.lineTo(vertices[0].x*drawScale,vertices[0].y*drawScale);
-			canvas.stroke();
-		}
-
-		this.canvasDrawCircle = function(canvas,radius,center)
-		{
-			var drawScale = ANEngine.drawScale;
-			cx = center.x * drawScale,
-         	cy = center.y * drawScale;
-      		canvas.moveTo(0, 0);
-      		canvas.beginPath();
-      		canvas.arc(cx, cy, radius * drawScale, 0, Math.PI * 2, true);
-      		canvas.closePath();
-      		canvas.stroke();
-		}
-
-		//红色
-		this.drawPhyBorder = function(canvas,_sprite)
-		{
-			canvas.save();
-			var drawScale = ANEngine.drawScale;
-			var x=this.x()*drawScale,y=this.y()*drawScale,pivotX=this.pivotX()*drawScale,
-			pivotY=this.pivotY()*drawScale,width=this.width()*drawScale,height=this.height()*drawScale;
-			var translateX = x+pivotX,translateY = y+pivotY;
-			//应用位移和旋转
-			canvas.translate(translateX,translateY);
-			canvas.rotate(-rotate);
-			canvas.translate(-translateX,-translateY);
-
-			canvas.strokeStyle = "#ff0000";
-			var sprite = _sprite||this;
-			var drawScale = ANEngine.drawScale;
-			var body = sprite.physicalSkin.getPhyAttr().body;
-			if(body)
-			{
-				if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Box)
-				{
-					var localVertices = body.GetFixtureList().GetShape().GetVertices();
-					var vertices = Array(localVertices.length);
-					var xf = body.m_xf;
-					for(var i in localVertices)
-					{
-						vertices[i] = localVertices[i];
-						vertices[i] = Box2D.Common.Math.b2Math.MulX(xf, vertices[i]);
-					}
-					sprite.canvasDraw(canvas,vertices);
-				}
-				else if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Circle)
-				{
-					radius = body.GetFixtureList().GetShape().m_radius;
-					var center = Box2D.Common.Math.b2Math.MulX(body.m_xf,body.GetFixtureList().GetShape().m_p);
-					sprite.canvasDrawCircle(canvas,radius,center);
-				}
-			}
-			canvas.restore();
-		}
-
-		//蓝色
-		this.drawSpriteBorder = function(canvas,_sprite)
-		{
-			canvas.save();
-			canvas.strokeStyle = "#0000ff";
-			var sprite = _sprite||this;
-			var drawScale = ANEngine.drawScale;
-			canvas.beginPath();
-			canvas.moveTo(sprite.x()*drawScale,sprite.y()*drawScale);
-			canvas.lineTo((sprite.width()+sprite.x())*drawScale,sprite.y()*drawScale);
-			canvas.lineTo((sprite.width()+sprite.x())*drawScale,(sprite.height()+sprite.y())*drawScale);
-			canvas.lineTo(sprite.x()*drawScale,(sprite.height()+sprite.y())*drawScale);
-			canvas.lineTo(sprite.x()*drawScale,sprite.y()*drawScale);
-			canvas.closePath();
-			canvas.stroke();
-			canvas.restore();	
-		}
-
-		this.draw = function(canvas)
-		{
-			var phyAttr = this.physicalSkin.getPhyAttr();
-			if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
-			{
-				this.x(phyAttr.body.GetPosition().x-this.width()/2);
-				this.y(phyAttr.body.GetPosition().y-this.height()/2);
-				this.rotate(phyAttr.body.GetAngle());
-			}
-			canvas.save();
-			var drawScale = ANEngine.drawScale;
-			var x=this.x()*drawScale,y=this.y()*drawScale,pivotX=this.pivotX()*drawScale,
-			pivotY=this.pivotY()*drawScale,width=this.width()*drawScale,height=this.height()*drawScale;
-			var translateX = x+pivotX,translateY = y+pivotY;
-			//应用位移和旋转
-			canvas.translate(translateX,translateY);
-			canvas.rotate(rotate);
-			canvas.translate(-translateX,-translateY);
-			if(func!=null)
-				func(canvas,this);
-			if(this.drawBorder)
-			{
-				this.drawPhyBorder(canvas);
-				this.drawSpriteBorder(canvas);
-			}
-			if(image!=null)
-			{
-				if(imageCut.use)
-					canvas.drawImage(image,imageCut.sx,imageCut.sy,imageCut.swidth,imageCut.sheight,x,y,width,height);
-				else
-					canvas.drawImage(image,x,y,width,height);
-			}
-			canvas.restore();
-		}
+		canvas.restore();
+	}
 }
 
 /*

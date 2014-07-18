@@ -12,7 +12,7 @@
 			var layer = new ANEngine.Layer();
 			var spriteA = new ANEngine.Sprite(4,2,2,2);
 			var spriteB = new ANEngine.Sprite(3,11,30,2,.3);
-			var spriteC = new ANEngine.Sprite(8,2,4,4);
+			var spriteC = new ANEngine.Sprite(8,0,4,4);
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			//设置物理皮肤
@@ -78,8 +78,13 @@
 			spriteD.drawBorder = true;
 			spriteE.drawBorder = true;
 
+			spriteC.alpha(.5);
+			//layer.removeAnimItem(spriteC);
+			//spriteC.physicalSkin.destroyPhy();
+			//layer.addAnimItem(spriteC);
+
 			//睡眠
-			//spriteA.setAwakePhy(false);
+			//spriteC.physicalSkin.setAwakePhy(false);
 			//var px=0,py=0;
 			//移动物体
 			//spriteC.physicalSkin.setTransformPhy(px,py);px+=.02;py+=.01;
