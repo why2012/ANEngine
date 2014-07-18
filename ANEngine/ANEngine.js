@@ -145,6 +145,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	var rotate = _rotate==undefined?0:_rotate;//旋转弧度
 	var alpha = 1;
 	var blend = "source_over";
+	var scaleW=1,scaleH=1;
 	this.func = null;
 	this.layer = null;
 	this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
@@ -203,15 +204,21 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	this.alpha = function(_alpha)
 	{
 		alpha = _alpha||alpha;
-		alpha = alpha==undefined?1:alpha;
+		alpha = alpha==0?0:alpha;
 		return alpha;
 	}
 
 	this.blend = function(_blend)
 	{
 		blend = _blend||blend;
-		blend = blend==undefined?1:blend;
 		return blend;
+	}
+
+	this.scale = function(sw,sh)
+	{
+		scaleW = sw||scaleW;
+		scaleH = sh||scaleH;
+		return {scaleW:scaleW,scaleH:scaleH};
 	}
 
 	this.canvasDraw = function(canvas,vertices)
@@ -320,6 +327,10 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		canvas.globalAlpha = alpha;
 		//设置混色
 		canvas.globalCompositeOperation = blend;
+		//缩放
+		canvas.translate(translateX,translateY);
+		canvas.scale(scaleW,scaleH);
+		canvas.translate(-translateX,-translateY);
 	}
 
 	this.draw = function(canvas){}
