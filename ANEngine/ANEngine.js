@@ -7,7 +7,7 @@ var ANEngine = function()
 
 }
 
-ANEngine.drawScale = 30;
+ANEngine.drawScale = 30;//一单位对应30像素
 ANEngine.fps = 60;
 //物理引擎采用box2d
 ANEngine.physicalEngine = {};
@@ -377,6 +377,104 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 					this.y()*ANEngine.drawScale,
 					this.width()*ANEngine.drawScale,
 					this.height()*ANEngine.drawScale);
+		}
+		canvas.restore();
+	}
+}
+
+//影片剪辑
+ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
+{
+	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
+	var spriteSheetData = [];
+	var image = null;
+	var _totalFrame = 0;
+	var _curFrame = 0;
+	var fps = 0;//影片剪辑的帧率
+	var movieClipWidth = 0,movieClipHeight = 0;
+	var isPlay = true;
+	var lastFrameTime = 0;//播放前一帧的时间
+	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+
+	this.setSpriteSheet = function(_image,data,_fps)
+	{
+		fps = fps||_fps;
+		movieClipWidth = data.meta.size.w/ANEngine.drawScale;
+		movieClipHeight = data.meta.size.h/ANEngine.drawScale;
+		var i = 0;
+		spriteSheetData = [];
+		for(var index in data.frames)
+		{
+			var frame = {name:i,frameData:data.frames[index]};
+			spriteSheetData.push(frame);
+			i++;
+		}
+		_totalFrame = i;
+		image = _image;
+		totalFrame = spriteSheetData.length;
+	}
+
+	this.totalFrame = function()
+	{
+		return _totalFrame;
+	}
+
+	this.curFrame = function()
+	{
+		return _curFrame;
+	}
+
+	this.stop = function()
+	{
+		isPlay = false;
+	}
+
+	this.start = function()
+	{
+		isPlay = true;
+	}
+
+	this.gotoAndPlay = function(num)
+	{
+		_curFrame = num;
+		isPlay = true;
+	}
+
+	this.gotoAndStop = function(num)
+	{
+		_curFrame = num;
+		isPlay = false;
+	}
+
+	this.draw = function(canvas)
+	{
+		var phyAttr = this.physicalSkin.getPhyAttr();
+		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
+		{
+			this.x(phyAttr.body.GetPosition().x-this.width()/2);
+			this.y(phyAttr.body.GetPosition().y-this.height()/2);
+			this.rotate(phyAttr.body.GetAngle());
+		}
+		canvas.save();
+		this.preDraw(canvas);//调用基类的预处理
+		if(image!=null)
+		{
+			var curTime = new Date().getTime();
+			var interval = curTime-lastFrameTime;
+			var frame = spriteSheetData[_curFrame].frameData;
+			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w,frame.frame.h,
+					this.x()*ANEngine.drawScale,
+					this.y()*ANEngine.drawScale,
+					this.width()*ANEngine.drawScale,
+					this.height()*ANEngine.drawScale);
+			if(!fps||interval>=1000/fps)
+			{
+				lastFrameTime = curTime;
+				if(isPlay)
+				{
+					_curFrame = ++_curFrame>=_totalFrame?0:_curFrame;
+				}
+			}
 		}
 		canvas.restore();
 	}

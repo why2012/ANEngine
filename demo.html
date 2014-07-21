@@ -3,6 +3,7 @@
 	<title>ANEngine</title>
 	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.js"></script>
 	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
+	<script type="text/javascript" src="ANEngine/jquery-2.0.2.min.js"></script>
 </head>
 
 <body>
@@ -15,6 +16,7 @@
 			var spriteC = new ANEngine.Sprite(8,0,4,4);
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
+			var movieClip = new ANEngine.MovieClip(5,3,4,4);
 			//设置物理皮肤
 			var phyData = {type:ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic,shape:ANEngine.physicalEngine.PhysicsAttr.Shape.Box};
 			phyData.type = ANEngine.physicalEngine.PhysicsAttr.Type.Static;
@@ -25,6 +27,8 @@
 			spriteA.physicalSkin.setPhysics(phyData);
 			spriteC.physicalSkin.setPhysics(phyData);
 			spriteE.physicalSkin.setPhysics(phyData);
+			phyData.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Box;
+			movieClip.physicalSkin.setPhysics(phyData);
 
 			//设置背景贴图
 			var image = new Image();
@@ -52,6 +56,16 @@
 			image5.onload = function(){
 				spriteE.setChartlet(image5);
 			};
+			var spriteimage1 = new Image();
+			spriteimage1.src = "assets/zombie1.png";
+			spriteimage1.onload = function(){
+				var image = spriteimage1;
+				var clip = movieClip;
+				$.getJSON("assets/zombie1.json",function(json){
+					clip.setSpriteSheet(image,json,24);
+					//console.log(movieClip.totalFrame());
+				});
+			};
 
 			//添加Sprite，图层，物理外形
 			layer.addAnimItem(spriteA);
@@ -59,12 +73,14 @@
 			layer.addAnimItem(spriteC);
 			layer.addAnimItem(spriteD);
 			layer.addAnimItem(spriteE);
+			layer.addAnimItem(movieClip);
 			scene.addLayer(layer);
 			spriteA.physicalSkin.addToPhyWorld();
 			spriteB.physicalSkin.addToPhyWorld();
 			spriteC.physicalSkin.addToPhyWorld();
 			spriteD.physicalSkin.addToPhyWorld();
 			spriteE.physicalSkin.addToPhyWorld();
+			movieClip.physicalSkin.addToPhyWorld();
 
 			/*spriteA.drawInCanvas(function(canvas,g)
 				{
@@ -77,6 +93,7 @@
 			spriteC.drawBorder = true;
 			spriteD.drawBorder = true;
 			spriteE.drawBorder = true;
+			movieClip.drawBorder = true;
 
 			spriteC.alpha(.5);
 			spriteC.scale(.5,.5);
