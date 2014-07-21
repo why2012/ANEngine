@@ -30,6 +30,7 @@ ANEngine.Scene = function(_canvas)
 		var height = _canvas.height;
 		var canvas = _canvas.getContext("2d");
 		var layers = new Array();
+		var backgroud = null;
 		this.phyWorld = ANEngine.physicalEngine.createWorld(ANEngine.physicalEngine.gravity.x,ANEngine.physicalEngine.gravity.y);
 
 		//添加图层
@@ -40,10 +41,18 @@ ANEngine.Scene = function(_canvas)
 			layer.scene = this;
 		}
 
+		//设置背景
+		this.setBG = function(image)
+		{
+			backgroud = image;
+		}
+
 		//场景绘制
 		this.drawScene = function()
 		{
 			canvas.clearRect(0,0,width,height);
+			if(backgroud!=null)
+				canvas.drawImage(backgroud,0,0,width,height);
 			for(var index in layers)
 			{
 				layers[index].drawLayer(canvas);
@@ -391,7 +400,6 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	var _totalFrame = 0;
 	var _curFrame = 0;
 	var fps = 0;//影片剪辑的帧率
-	var movieClipWidth = 0,movieClipHeight = 0;
 	var isPlay = true;
 	var lastFrameTime = 0;//播放前一帧的时间
 	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
@@ -399,8 +407,6 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	this.setSpriteSheet = function(_image,data,_fps)
 	{
 		fps = fps||_fps;
-		movieClipWidth = data.meta.size.w/ANEngine.drawScale;
-		movieClipHeight = data.meta.size.h/ANEngine.drawScale;
 		var i = 0;
 		spriteSheetData = [];
 		for(var index in data.frames)
