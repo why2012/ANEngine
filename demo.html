@@ -6,12 +6,17 @@
 	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
 	<script type="text/javascript" src="ANEngine/ANEngine.Util.js"></script>
 </head>
-
 <body>
 	<script>
 		window.onload = function(){
-			document.getElementById("canvas").width = $(document).width();
-			document.getElementById("canvas").height = $(document).height();
+			$(window).resize(function()
+			{
+				document.getElementById("canvas").width = $(window).width();
+				document.getElementById("canvas").height = $(window).height();		
+			});
+			document.getElementById("canvas").width = $(window).width();
+			document.getElementById("canvas").height = $(window).height();
+
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			var spriteA = new ANEngine.Sprite(4,2,2,2);
@@ -20,6 +25,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
+			particle.blend("lighter");
 			var movieClip = new ANEngine.MovieClip(5,3,4,4);
 			//设置物理皮肤
 			var phyData = {type:ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic,shape:ANEngine.physicalEngine.PhysicsAttr.Shape.Box};
@@ -47,6 +53,7 @@
 			image2.src = "assets/bird1.png";
 			image2.onload = function(){
 				spriteC.setChartlet(image2);
+				layer.addAnimItem(spriteC.Clone());
 			};
 			var image3 = new Image();
 			image3.src = "assets/glass.png";
@@ -67,8 +74,8 @@
 			image6.src = "assets/eff.png";
 			image6.onload = function(){
 				$.get("assets/eff.xml",{},function(xml){
-					particle.blend("lighter");
 					particle.setSpriteSheet(image6,ANEngine.Util.MovieClip.XmlToJson(xml),24);
+					layer.addAnimItem(particle.Clone());	
 				},"xml");
 			};
 			var spriteimage1 = new Image();

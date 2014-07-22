@@ -14,6 +14,8 @@ ANEngine.physicalEngine = {};
 ANEngine.physicalEngine.velocityIterations = 10;
 ANEngine.physicalEngine.positionIterations = 10;
 ANEngine.physicalEngine.gravity = {x:0,y:10};
+//粒子系统
+ANEngine.Particle = {};
 
 //每帧渲染
 ANEngine.render = function(scene)
@@ -28,6 +30,7 @@ ANEngine.Scene = function(_canvas)
 {
 		var width = _canvas.width;
 		var height = _canvas.height;
+		this.whFactor = width/height;
 		var canvas = _canvas.getContext("2d");
 		var layers = new Array();
 		var backgroud = null;
@@ -50,6 +53,9 @@ ANEngine.Scene = function(_canvas)
 		//场景绘制
 		this.drawScene = function()
 		{
+			width = _canvas.width
+			height = _canvas.height;
+			this.whFactor = width/height;
 			canvas.clearRect(0,0,width,height);
 			if(backgroud!=null)
 				canvas.drawImage(backgroud,0,0,width,height);
@@ -343,6 +349,18 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	}
 
 	this.draw = function(canvas){}
+
+	this.DisplayObject_Clone = function()
+	{
+		var co = new this.constructor(_x,_y,_width,_height,_rotate);
+		co.pivotX(pivotX);
+		co.pivotY(pivotY);
+		co.alpha(alpha);
+		co.blend(blend);
+		co.scale(scaleW,scaleH);
+		co.layer = this.layer;
+		return co;
+	}
 }
 
 ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
@@ -389,6 +407,14 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 		}
 		canvas.restore();
 	}
+
+	this.Clone = function()
+	{
+		var co = this.DisplayObject_Clone();
+		co.setChartlet(image,imageCut.use?imageCut:null);
+		//co.physicalSkin = physicalSkin.Clone();
+		return co;
+	}
 }
 
 //影片剪辑
@@ -402,19 +428,21 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	var fps = 0;//影片剪辑的帧率
 	var isPlay = true;
 	var lastFrameTime = 0;//播放前一帧的时间
+	var data = null;
 	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
 
-	this.setSpriteSheet = function(_image,data,_fps)
+	this.setSpriteSheet = function(_image,_data,_fps)
 	{
 		fps = fps||_fps;
 		var i = 0;
 		spriteSheetData = [];
-		for(var index in data.frames)
+		for(var index in _data.frames)
 		{
-			var frame = {name:i,frameData:data.frames[index]};
+			var frame = {name:i,frameData:_data.frames[index]};
 			spriteSheetData.push(frame);
 			i++;
 		}
+		data = _data;
 		_totalFrame = i;
 		image = _image;
 		totalFrame = spriteSheetData.length;
@@ -484,6 +512,208 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		}
 		canvas.restore();
 	}
+
+	this.Clone = function()
+	{
+		var co = this.DisplayObject_Clone();
+		co.setSpriteSheet(image,data,fps);
+		//co.physicalSkin = physicalSkin.Clone();
+		return co;
+	}
+}
+
+//粒子
+ANEngine.Particle.Particle = function(displayObject)
+{
+	this.dObject = displayObject;
+
+	this.PUBLIC_SCALEX_VALUE = 0;
+    this.PUBLIC_SCALEY_VALUE = 0;
+ 
+    this.PUBLIC_A_VALUE = 0
+    this.PUBLIC_R_VALUE = 0
+    this.PUBLIC_G_VALUE = 0
+    this.PUBLIC_B_VALUE = 0;
+ 
+    this.PUBLIC_ANGLE_VALUE = 0;
+    this.PUBLIC_ROTATION_VALUE = 0
+ 
+    this.PUBLIC_SPEED_VALUE = 0;
+    this.PUBLIC_ALPHA_VALUE=0;
+
+    this.draw=function()
+    {
+ 
+        //让角度加上旋转角度
+        this.PUBLIC_ROTATION_VALUE += this.PUBLIC_ANGLE_VALUE;
+ 
+        //让粒子按照指定的速度和方向运动
+        this.dObject.x(this.dObject.x()+Math.cos(this.PUBLIC_ROTATION_VALUE) * this.PUBLIC_SPEED_VALUE);
+        this.dObject.y(this.dObject.y()+Math.sin(this.PUBLIC_ROTATION_VALUE) *this.PUBLIC_SPEED_VALUE);
+ 
+        this.dObject.scaleX(this.dObject.scaleX()+this.PUBLIC_SCALEX_VALUE);
+        this.dObject.scaleY(this.dObject.scaleY()+this.PUBLIC_SCALEY_VALUE);
+ 
+        //所有属性加上某个值
+        this.dObject.alpha(this.dObject.alpha()+this.PUBLIC_ALPHA_VALUE);
+        /*this.quad.r+=this.PUBLIC_R_VALUE;
+        this.quad.g+=this.PUBLIC_G_VALUE;
+        this.quad.b+=this.PUBLIC_B_VALUE;
+        this.quad.a+=this.PUBLIC_A_VALUE;*/
+ 
+        //如果透明度小于0就清理粒子
+        if (this.dObject.alpha()<= 0)
+        {
+            this.clear();
+        }
+        this.dObject.draw();
+    }
+
+     //初始化粒子的所有状态
+    this.show=function()
+    {
+        this.dObject.alpha(1);
+        this.dObject.scaleX(1);
+        this.dObject.scaleX(1);
+        /*this.quad.r=1
+        this.quad.g=1
+        this.quad.b=1
+        this.quad.a=1*/
+        this.PUBLIC_START = true;
+    }
+
+    /**
+     * 清理粒子
+     */
+    this.clear=function()
+    {
+        this.dObject.alpha(0);
+        this.PUBLIC_START = false;
+    }
+}
+
+//粒子发射器
+//粒子对象，发射器属性值，粒子数
+ANEngine.Particle.ParticleEmitter = function(displayObject,pLauncher,pNum)
+{
+
+	var particles = [];
+	var particle_num = pNum;
+	var dObject = displayObject;
+	this.launcher = pLauncher;
+	for(var i=0;i<pNum;i++)
+	{
+		particles.push(new ANEngine.Particle.Particle(displayObject.Clone()));
+	}
+
+	initParticles();
+
+	var initParticles = function()
+	{
+		for(var i in particles)
+		{
+			if (!this.list[i].PUBLIC_START)
+            {
+                //填充粒子属性
+                var particle = particle[i];
+                particle.show();
+				var o = particle.dObject;
+				o.x(launcher.PUBLIC_X + Math.random() * launcher.PUBLIC_SCOPE_X - launcher.PUBLIC_SCOPE_X / 2);
+				o.y(launcher.PUBLIC_Y + Math.random() * launcher.PUBLIC_SCOPE_Y - launcher.PUBLIC_SCOPE_Y / 2);
+
+                particle.PUBLIC_A_VALUE = this.launcher.PUBLIC_A_VALUE;
+                particle.PUBLIC_R_VALUE = this.launcher.PUBLIC_R_VALUE;
+                particle.PUBLIC_G_VALUE = this.launcher.PUBLIC_G_VALUE;
+                particle.PUBLIC_B_VALUE = this.launcher.PUBLIC_B_VALUE;
+ 
+                particle.PUBLIC_ANGLE_VALUE = this.launcher.PUBLIC_ANGLE_VALUE;
+                particle.PUBLIC_ALPHA_VALUE = this.launcher.PUBLIC_ALPHA_VALUE;
+                particle.PUBLIC_SCALEX_VALUE = this.launcher.PUBLIC_SCALEX_VALUE;
+                particle.PUBLIC_SCALEY_VALUE = this.launcher.PUBLIC_SCALEY_VALUE;
+ 
+                /*o.a=this.launcher.PUBLIC_A;
+                o.r=this.launcher.PUBLIC_R;
+                o.g=this.launcher.PUBLIC_G;
+                o.b=this.launcher.PUBLIC_B;*/
+ 
+                o.rotate(this.launcher.PUBLIC_ROTATION_VAlUE);
+ 
+                particle.PUBLIC_ROTATION_VALUE = this.launcher.PUBLIC_ROTATION_VAlUE + Math.random() * this.launcher.PUBLIC_ROTATION_RANDOM;
+                particle.PUBLIC_SPEED_VALUE = this.launcher.PUBLIC_SPEED_VALUE;
+                break;
+            }
+		}
+	}
+
+	this.resetParticles = function(displayObject,_pNum)
+	{
+		pNum = _pNum||pNum;
+		particles = [];
+		dObject = displayObject;
+		for(var i=0;i<pNum;i++)
+		{
+			particles.push(displayObject.Clone());
+		}
+		initParticles();
+	}
+
+	this.draw = function(canvas)
+	{
+		for(var i in particles)
+		{
+			if(particles[i].PUBLIC_START)
+				particles[i].draw();
+		}
+	}
+}
+
+//发射器属性
+ANEngine.Particle.Launcher = function()
+{
+	//粒子出生X坐标
+    this.PUBLIC_X = 0;
+ 
+    //粒子出生Y坐标
+    this.PUBLIC_Y = 0;
+ 
+    //粒子X随机范围
+    this.PUBLIC_SCOPE_X = 0;
+ 
+    //粒子Y随机范围
+    this.PUBLIC_SCOPE_Y = 0;
+ 
+    //粒子X比例缩放值
+    this.PUBLIC_SCALEX_VALUE = 0;
+ 
+    //粒子Y比例缩放值
+    this.PUBLIC_SCALEY_VALUE =0;
+ 
+    //粒子初始化颜色参数
+    this.PUBLIC_A_VALUE = 0;
+    this.PUBLIC_R_VALUE = 0;
+    this.PUBLIC_G_VALUE = 0;
+    this.PUBLIC_B_VALUE = 0;
+ 
+    //粒子角度递增值
+    this.PUBLIC_ANGLE_VALUE = 0;
+ 
+    //粒子初始化角度
+    this.PUBLIC_ROTATION_VAlUE = 0
+ 
+    //粒子随机角度
+    this.PUBLIC_ROTATION_RANDOM = 0;
+ 
+    //粒子运动速度
+    this.PUBLIC_SPEED_VALUE = 0
+ 
+    //粒子初始化透明度
+    this.PUBLIC_ALPHA_VALUE=1;
+ 
+    //粒子递增颜色值
+    this.PUBLIC_R = 1
+    this.PUBLIC_G = 1
+    this.PUBLIC_B = 1
+    this.PUBLIC_A = 1
 }
 
 /*
