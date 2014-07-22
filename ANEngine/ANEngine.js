@@ -28,6 +28,8 @@ ANEngine.render = function(scene)
 
 ANEngine.Scene = function(_canvas)
 {
+	var prevTime = 0;
+	var curTime = 0;
 		var width = _canvas.width;
 		var height = _canvas.height;
 		this.whFactor = width/height;
@@ -53,6 +55,7 @@ ANEngine.Scene = function(_canvas)
 		//场景绘制
 		this.drawScene = function()
 		{
+			curTime = new Date().getTime()
 			width = _canvas.width
 			height = _canvas.height;
 			this.whFactor = width/height;
@@ -63,6 +66,8 @@ ANEngine.Scene = function(_canvas)
 			{
 				layers[index].drawLayer(canvas);
 			}
+			canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
+			prevTime = curTime;
 		}
 }
 
@@ -947,6 +952,7 @@ ANEngine.physicalEngine.NormalPA = function(x,y,angle)
 //一个点击拖拽控制器，调用update更新
 ANEngine.physicalEngine.BaseController = function(canvas,world)
 {
+	var factor = 30/ANEngine.drawScale;
 	var mouseX, mouseY,mousePVec, isMouseDown, selectedBody, mouseJoint;
 	var canvasPosition = getElementPosition(canvas);
 	document.addEventListener("mousedown", function(e) {
@@ -966,8 +972,8 @@ ANEngine.physicalEngine.BaseController = function(canvas,world)
 		var scrollTopLeft = getScrollTopLeft();
         var clientX = e.clientX + scrollTopLeft.Left;
         var clientY = e.clientY + scrollTopLeft.Top;
-        mouseX = (clientX - canvasPosition.x) / 30;
-        mouseY = (clientY - canvasPosition.y) / 30;
+        mouseX = factor*(clientX - canvasPosition.x) / 30;
+        mouseY = factor*(clientY - canvasPosition.y) / 30;
         //console.log(mouseX+","+mouseY);
     };
 
@@ -1015,7 +1021,6 @@ ANEngine.physicalEngine.BaseController = function(canvas,world)
         var aabb = new ANEngine.physicalEngine.Box2d.b2AABB();
         aabb.lowerBound.Set(mouseX - 0.001, mouseY - 0.001);
         aabb.upperBound.Set(mouseX + 0.001, mouseY + 0.001);
-            
         // Query the world for overlapping shapes.
 
         selectedBody = null;
