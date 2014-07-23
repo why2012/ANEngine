@@ -156,33 +156,20 @@ ANEngine.Layer = function()
 //可视元素基类
 ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 {
-	var x = _x;
-	var y = _y;
-	var pivotX = _width/2;//旋转轴心
-	var pivotY = _height/2;
+	this.x = _x;
+	this.y = _y;
+	this.pivotX = _width/2;//旋转轴心
+	this.pivotY = _height/2;
 	var width = _width;
 	var height = _height;
-	var rotate = _rotate==undefined?0:_rotate;//旋转弧度
-	var alpha = 1;
-	var blend = "source_over";
-	var scaleW=1,scaleH=1;
+	this.rotate = _rotate==undefined?0:_rotate;//旋转弧度
+	this.alpha = 1;
+	this.blend = "source_over";
+	this.scaleW=1;
+	this.scaleH=1;
 	this.func = null;
 	this.layer = null;
 	this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
-
-	this.x = function(_x)
-	{
-		x = _x||x;
-		x = x==undefined?0:x;
-		return x;
-	}
-
-	this.y = function(_y)
-	{
-		y = _y||y;
-		y = y==undefined?0:y;
-		return y;
-	}
 
 	this.width = function(_width)
 	{
@@ -198,47 +185,6 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		height = height==undefined?0:height;
 		pivotY = height/2;
 		return height;
-	}
-
-	this.pivotX = function(_pivotX)
-	{
-		pivotX = _pivotX||pivotX;
-		pivotX = pivotX==undefined?0:pivotX;
-		return pivotX;
-	}
-
-	this.pivotY = function(_pivotY)
-	{
-		pivotY = _pivotY||pivotY;
-		pivotY = pivotY==undefined?0:pivotY;
-		return pivotY;
-	}
-
-	this.rotate = function(_rotate)
-	{
-		rotate = _rotate||rotate;
-		rotate = rotate==undefined?0:rotate;
-		return rotate;
-	}
-
-	this.alpha = function(_alpha)
-	{
-		alpha = _alpha||alpha;
-		alpha = alpha==0?0:alpha;
-		return alpha;
-	}
-
-	this.blend = function(_blend)
-	{
-		blend = _blend||blend;
-		return blend;
-	}
-
-	this.scale = function(sw,sh)
-	{
-		scaleW = sw||scaleW;
-		scaleH = sh||scaleH;
-		return {scaleW:scaleW,scaleH:scaleH};
 	}
 
 	this.canvasDraw = function(canvas,vertices)
@@ -271,12 +217,12 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	{
 		canvas.save();
 		var drawScale = ANEngine.drawScale;
-		var x=this.x()*drawScale,y=this.y()*drawScale,pivotX=this.pivotX()*drawScale,
-		pivotY=this.pivotY()*drawScale,width=this.width()*drawScale,height=this.height()*drawScale;
+		var x=this.x*drawScale,y=this.y*drawScale,pivotX=this.pivotX*drawScale,
+		pivotY=this.pivotY*drawScale,width=this.width*drawScale,height=this.height*drawScale;
 		var translateX = x+pivotX,translateY = y+pivotY;
 		//应用位移和旋转
 		canvas.translate(translateX,translateY);
-		canvas.rotate(-rotate);
+		canvas.rotate(-this.rotate);
 		canvas.translate(-translateX,-translateY);
 
 		canvas.strokeStyle = "#ff0000";
@@ -315,11 +261,11 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		var sprite = _sprite||this;
 		var drawScale = ANEngine.drawScale;
 		canvas.beginPath();
-		canvas.moveTo(sprite.x()*drawScale,sprite.y()*drawScale);
-		canvas.lineTo((sprite.width()+sprite.x())*drawScale,sprite.y()*drawScale);
-		canvas.lineTo((sprite.width()+sprite.x())*drawScale,(sprite.height()+sprite.y())*drawScale);
-		canvas.lineTo(sprite.x()*drawScale,(sprite.height()+sprite.y())*drawScale);
-		canvas.lineTo(sprite.x()*drawScale,sprite.y()*drawScale);
+		canvas.moveTo(sprite.x*drawScale,sprite.y*drawScale);
+		canvas.lineTo(sprite.width()*drawScale+sprite.x*drawScale,sprite.y*drawScale);
+		canvas.lineTo(sprite.width()*drawScale+sprite.x*drawScale,sprite.height()*drawScale+sprite.y*drawScale);
+		canvas.lineTo(sprite.x*drawScale,sprite.height()*drawScale+sprite.y*drawScale);
+		canvas.lineTo(sprite.x*drawScale,sprite.y*drawScale);
 		canvas.closePath();
 		canvas.stroke();
 		canvas.restore();	
@@ -329,12 +275,12 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	{
 		var drawScale = ANEngine.drawScale;
 		//计算像素单位
-		var _x=x*drawScale,_y=y*drawScale,_pivotX=pivotX*drawScale,
-		_pivotY=pivotY*drawScale,_width=width*drawScale,_height=height*drawScale;
+		var _x=this.x*drawScale,_y=this.y*drawScale,_pivotX=this.pivotX*drawScale,
+		_pivotY=this.pivotY*drawScale,_width=width*drawScale,_height=height*drawScale;
 		var translateX = _x+_pivotX,translateY = _y+_pivotY;
 		//应用位移和旋转
 		canvas.translate(translateX,translateY);
-		canvas.rotate(this.rotate());
+		canvas.rotate(this.rotate);
 		canvas.translate(-translateX,-translateY);
 		if(this.func!=null)
 			this.func(canvas,this);
@@ -344,12 +290,12 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 			this.drawSelfBorder(canvas);
 		}
 		//设置透明度
-		canvas.globalAlpha = alpha;
+		canvas.globalAlpha = this.alpha;
 		//设置混色
-		canvas.globalCompositeOperation = blend;
+		canvas.globalCompositeOperation = this.blend;
 		//缩放
 		canvas.translate(translateX,translateY);
-		canvas.scale(scaleW,scaleH);
+		canvas.scale(this.scaleW,this.scaleH);
 		canvas.translate(-translateX,-translateY);
 	}
 
@@ -358,11 +304,12 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	this.DisplayObject_Clone = function()
 	{
 		var co = new this.constructor(_x,_y,_width,_height,_rotate);
-		co.pivotX(pivotX);
-		co.pivotY(pivotY);
-		co.alpha(alpha);
-		co.blend(blend);
-		co.scale(scaleW,scaleH);
+		co.pivotX = this.pivotX;
+		co.pivotY = this.pivotY;
+		co.alpha = this.alpha;
+		co.blend = this.blend;
+		co.scaleW = this.scaleW;
+		co.scaleH = this.scaleH;
 		co.layer = this.layer;
 		return co;
 	}
@@ -389,9 +336,9 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 		var phyAttr = this.physicalSkin.getPhyAttr();
 		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 		{
-			this.x(phyAttr.body.GetPosition().x-this.width()/2);
-			this.y(phyAttr.body.GetPosition().y-this.height()/2);
-			this.rotate(phyAttr.body.GetAngle());
+			this.x = phyAttr.body.GetPosition().x-this.width()/2;
+			this.y = phyAttr.body.GetPosition().y-this.height()/2;
+			this.rotate = phyAttr.body.GetAngle();
 		}
 		canvas.save();
 		this.preDraw(canvas);//调用基类的预处理
@@ -399,14 +346,14 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 		{
 			if(imageCut.use)
 				canvas.drawImage(image,imageCut.sx,imageCut.sy,imageCut.swidth,imageCut.sheight,
-					this.x()*ANEngine.drawScale,
-					this.y()*ANEngine.drawScale,
+					this.x*ANEngine.drawScale,
+					this.y*ANEngine.drawScale,
 					this.width()*ANEngine.drawScale,
 					this.height()*ANEngine.drawScale);
 			else
 				canvas.drawImage(image,
-					this.x()*ANEngine.drawScale,
-					this.y()*ANEngine.drawScale,
+					this.x*ANEngine.drawScale,
+					this.y*ANEngine.drawScale,
 					this.width()*ANEngine.drawScale,
 					this.height()*ANEngine.drawScale);
 		}
@@ -490,9 +437,9 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		var phyAttr = this.physicalSkin.getPhyAttr();
 		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 		{
-			this.x(phyAttr.body.GetPosition().x-this.width()/2);
-			this.y(phyAttr.body.GetPosition().y-this.height()/2);
-			this.rotate(phyAttr.body.GetAngle());
+			this.x = phyAttr.body.GetPosition().x-this.width()/2;
+			this.y = phyAttr.body.GetPosition().y-this.height()/2;
+			this.rotate = phyAttr.body.GetAngle();
 		}
 		canvas.save();
 		this.preDraw(canvas);//调用基类的预处理
@@ -502,8 +449,8 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 			var interval = curTime-lastFrameTime;
 			var frame = spriteSheetData[_curFrame].frameData;
 			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w,frame.frame.h,
-					this.x()*ANEngine.drawScale,
-					this.y()*ANEngine.drawScale,
+					this.x*ANEngine.drawScale,
+					this.y*ANEngine.drawScale,
 					this.width()*ANEngine.drawScale,
 					this.height()*ANEngine.drawScale);
 			if(!fps||interval>=1000/fps)
@@ -553,21 +500,21 @@ ANEngine.Particle.Particle = function(displayObject)
         this.PUBLIC_ROTATION_VALUE += this.PUBLIC_ANGLE_VALUE;
  
         //让粒子按照指定的速度和方向运动
-        this.dObject.x(this.dObject.x()+Math.cos(this.PUBLIC_ROTATION_VALUE) * this.PUBLIC_SPEED_VALUE);
-        this.dObject.y(this.dObject.y()+Math.sin(this.PUBLIC_ROTATION_VALUE) *this.PUBLIC_SPEED_VALUE);
+        this.dObject.x = this.dObject.x+Math.cos(this.PUBLIC_ROTATION_VALUE) * this.PUBLIC_SPEED_VALUE;
+        this.dObject.y = this.dObject.y+Math.sin(this.PUBLIC_ROTATION_VALUE) *this.PUBLIC_SPEED_VALUE;
  
-        this.dObject.scaleX(this.dObject.scaleX()+this.PUBLIC_SCALEX_VALUE);
-        this.dObject.scaleY(this.dObject.scaleY()+this.PUBLIC_SCALEY_VALUE);
+        this.dObject.scaleX = this.dObject.scaleX+this.PUBLIC_SCALEX_VALUE;
+        this.dObject.scaleY = this.dObject.scaleY+this.PUBLIC_SCALEY_VALUE;
  
         //所有属性加上某个值
-        this.dObject.alpha(this.dObject.alpha()+this.PUBLIC_ALPHA_VALUE);
+        this.dObject.alpha = this.dObject.alpha+this.PUBLIC_ALPHA_VALUE;
         /*this.quad.r+=this.PUBLIC_R_VALUE;
         this.quad.g+=this.PUBLIC_G_VALUE;
         this.quad.b+=this.PUBLIC_B_VALUE;
         this.quad.a+=this.PUBLIC_A_VALUE;*/
  
         //如果透明度小于0就清理粒子
-        if (this.dObject.alpha()<= 0)
+        if (this.dObject.alpha<= 0)
         {
             this.clear();
         }
@@ -577,9 +524,9 @@ ANEngine.Particle.Particle = function(displayObject)
      //初始化粒子的所有状态
     this.show=function()
     {
-        this.dObject.alpha(1);
-        this.dObject.scaleX(1);
-        this.dObject.scaleX(1);
+        this.dObject.alpha = 1;
+        this.dObject.scaleX = 1;
+        this.dObject.scaleX = 1;
         /*this.quad.r=1
         this.quad.g=1
         this.quad.b=1
@@ -592,7 +539,7 @@ ANEngine.Particle.Particle = function(displayObject)
      */
     this.clear=function()
     {
-        this.dObject.alpha(0);
+        this.dObject.alpha = 0;
         this.PUBLIC_START = false;
     }
 }
@@ -623,8 +570,8 @@ ANEngine.Particle.ParticleEmitter = function(displayObject,pLauncher,pNum)
                 var particle = particle[i];
                 particle.show();
 				var o = particle.dObject;
-				o.x(launcher.PUBLIC_X + Math.random() * launcher.PUBLIC_SCOPE_X - launcher.PUBLIC_SCOPE_X / 2);
-				o.y(launcher.PUBLIC_Y + Math.random() * launcher.PUBLIC_SCOPE_Y - launcher.PUBLIC_SCOPE_Y / 2);
+				o.x = launcher.PUBLIC_X + Math.random() * launcher.PUBLIC_SCOPE_X - launcher.PUBLIC_SCOPE_X / 2;
+				o.y = launcher.PUBLIC_Y + Math.random() * launcher.PUBLIC_SCOPE_Y - launcher.PUBLIC_SCOPE_Y / 2;
 
                 particle.PUBLIC_A_VALUE = this.launcher.PUBLIC_A_VALUE;
                 particle.PUBLIC_R_VALUE = this.launcher.PUBLIC_R_VALUE;
@@ -641,7 +588,7 @@ ANEngine.Particle.ParticleEmitter = function(displayObject,pLauncher,pNum)
                 o.g=this.launcher.PUBLIC_G;
                 o.b=this.launcher.PUBLIC_B;*/
  
-                o.rotate(this.launcher.PUBLIC_ROTATION_VAlUE);
+                o.rotate = this.launcher.PUBLIC_ROTATION_VAlUE;
  
                 particle.PUBLIC_ROTATION_VALUE = this.launcher.PUBLIC_ROTATION_VAlUE + Math.random() * this.launcher.PUBLIC_ROTATION_RANDOM;
                 particle.PUBLIC_SPEED_VALUE = this.launcher.PUBLIC_SPEED_VALUE;
@@ -848,9 +795,9 @@ ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
 			angle = angle==undefined?0:angle;
 			if(body)
 			{
-				_this.x(x);
-				_this.y(y);
-				_this.rotate(angle);
+				_this.x = x;
+				_this.y = y;
+				_this.rotate = angle;
 				body.SetTransform(new ANEngine.physicalEngine.NormalPA(x,y,angle));
 			}
 		}
@@ -883,8 +830,8 @@ ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
 			var density = phyData.density;
 			var friction = phyData.friction;
 			var restitution = phyData.restitution;
-			var angle = _this.rotate();
-			var x = _this.x(),y = _this.y(),width = _this.width(),height = _this.height();
+			var angle = _this.rotate;
+			var x = _this.x,y = _this.y,width = _this.width(),height = _this.height();
 			//console.log(x+","+y+","+width+","+height+","+angle);
 			phyAttr.shape = shape||phyAttr.shape;
 			phyAttr.type = type||phyAttr.type;

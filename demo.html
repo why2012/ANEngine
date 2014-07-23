@@ -25,7 +25,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
-			particle.blend("lighter");
+			particle.blend = "lighter";
 			var movieClip = new ANEngine.MovieClip(5,3,4,4);
 			//设置物理皮肤
 			var phyData = {type:ANEngine.physicalEngine.PhysicsAttr.Type.Dynamic,shape:ANEngine.physicalEngine.PhysicsAttr.Shape.Box};
