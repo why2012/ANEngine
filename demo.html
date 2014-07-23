@@ -2,6 +2,7 @@
 <head>
 	<title>ANEngine</title>
 	<script type="text/javascript" src="ANEngine/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="ANEngine/hammer.min.js"></script>
 	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.js"></script>
 	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
 	<script type="text/javascript" src="ANEngine/ANEngine.Util.js"></script>
@@ -138,7 +139,7 @@
 			//spriteE.physicalSkin.setJointTransform(80,20);
 
 			//鼠标控制
-			var baseController = new ANEngine.physicalEngine.BaseController(document.getElementById("canvas"),scene.phyWorld);
+			var baseController = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene.phyWorld);
 			//渲染
 			setInterval(function(){
 				//向物体物体中心施加力，单位牛

@@ -15,3 +15,143 @@ ANEngine.Util.MovieClip.XmlToJson = function(xml)
 
 	return json;
 }
+
+//一个点击拖拽控制器，调用update更新
+ANEngine.Util.BaseController = function(canvas,world,_mobile)
+{
+	var factor = 30/ANEngine.drawScale;
+	var mouseX, mouseY,mousePVec, isMouseDown, selectedBody, mouseJoint;
+	var canvasPosition = getElementPosition(canvas);
+	this.mobile = _mobile||false;
+	var hammer = null;
+	if(!this.mobile)
+	{
+		document.addEventListener("mousedown", function(e) {
+        	isMouseDown = true;
+        	handleMouseMove(e);
+        	document.addEventListener("mousemove", handleMouseMove, true);
+    	}, true);
+
+    	document.addEventListener("mouseup", function() {
+        	document.removeEventListener("mousemove", handleMouseMove, true);
+        	isMouseDown = false;
+        	mouseX = undefined;
+        	mouseY = undefined;
+    	}, true);
+
+    	document.addEventListener("touchstart", function(e) {
+        	isMouseDown = true;
+        	handleMouseMove(e);
+        	document.addEventListener("touchmove", handleMouseMove, true);
+    	}, true);
+
+    	document.addEventListener("touchend", function() {
+        	document.removeEventListener("touchmove", handleMouseMove, true);
+        	isMouseDown = false;
+        	mouseX = undefined;
+        	mouseY = undefined;
+    	}, true);
+	}
+	else
+	{
+
+	}
+
+	function handleMouseMove(e) {
+		if(e.targetTouches)
+			e = e.targetTouches[0];
+		var scrollTopLeft = getScrollTopLeft();
+        var clientX = e.clientX + scrollTopLeft.Left;
+        var clientY = e.clientY + scrollTopLeft.Top;
+        mouseX = factor*(clientX - canvasPosition.x) / 30;
+        mouseY = factor*(clientY - canvasPosition.y) / 30;
+        //console.log(mouseX+","+mouseY);
+    };
+
+    function getElementPosition(element) {
+        var elem=element, tagname="", x=0, y=0;
+           
+        while((typeof(elem) == "object") && (typeof(elem.tagName) != "undefined")) {
+            y += elem.offsetTop;
+            x += elem.offsetLeft;
+            tagname = elem.tagName.toUpperCase();
+
+            if(tagname == "BODY")
+                elem=0;
+
+            if(typeof(elem) == "object") {
+                if(typeof(elem.offsetParent) == "object")
+                    elem = elem.offsetParent;
+               	}
+        }
+        
+        return {x: x, y: y};
+    }
+
+    function getScrollTopLeft() 
+    { 
+    	var scrollPos={}; 
+    	if (typeof window.pageYOffset != undefined) { 
+        	scrollPos.Top = window.pageYOffset;
+        	scrollPos.Left = window.pageXOffset;
+    	} 
+    	else if (typeof document.compatMode != undefined
+    	 && document.compatMode != 'BackCompat') { 
+        	scrollPos.Top = document.documentElement.scrollTop; 
+        	scrollPos.Left = document.documentElement.scrollLeft; 
+    	} 
+    	else if (typeof document.body != undefined) { 
+        	scrollPos.Top = document.body.scrollTop; 
+        	scrollPos.Left = document.body.scrollLeft; 
+    	} 
+    	return scrollPos; 
+	}
+
+    function getBodyAtMouse() {
+        mousePVec = new ANEngine.physicalEngine.Box2d.b2Vec2(mouseX, mouseY);
+        var aabb = new ANEngine.physicalEngine.Box2d.b2AABB();
+        aabb.lowerBound.Set(mouseX - 0.001, mouseY - 0.001);
+        aabb.upperBound.Set(mouseX + 0.001, mouseY + 0.001);
+        // Query the world for overlapping shapes.
+
+        selectedBody = null;
+        world.QueryAABB(getBodyCB, aabb);
+        return selectedBody;
+    }
+
+    function getBodyCB(fixture) {
+        if(fixture.GetBody().GetType() != ANEngine.physicalEngine.Box2d.b2Body.b2_staticBody) {
+            if(fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec))
+            {
+                selectedBody = fixture.GetBody();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    this.update = function() {
+        if(isMouseDown && (!mouseJoint)) {
+            var body = getBodyAtMouse();
+            if(body) {
+                var md = new ANEngine.physicalEngine.Box2d.b2MouseJointDef();
+                md.bodyA = world.GetGroundBody();
+                md.bodyB = body;
+                md.target.Set(mouseX, mouseY);
+                md.collideConnected = true;
+                md.maxForce = 300.0 * body.GetMass();
+                mouseJoint = world.CreateJoint(md);
+                body.SetAwake(true);
+            }
+        }
+            
+        if(mouseJoint) {
+            if(isMouseDown) {
+                mouseJoint.SetTarget(new ANEngine.physicalEngine.Box2d.b2Vec2(mouseX, mouseY));
+            } else {
+                world.DestroyJoint(mouseJoint);
+                mouseJoint = null;
+            }
+        }
+    }
+}
