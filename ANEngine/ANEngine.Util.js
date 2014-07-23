@@ -17,54 +17,67 @@ ANEngine.Util.MovieClip.XmlToJson = function(xml)
 }
 
 //一个点击拖拽控制器，调用update更新
-ANEngine.Util.BaseController = function(canvas,world,_mobile)
+ANEngine.Util.BaseController = function(canvas,scene,_mobile)
 {
 	var factor = 30/ANEngine.drawScale;
 	var mouseX, mouseY,mousePVec, isMouseDown, selectedBody, mouseJoint;
 	var canvasPosition = getElementPosition(canvas);
+	var world = scene.phyWorld;
 	this.mobile = _mobile||false;
 	var hammer = null;
-	if(!this.mobile)
-	{
-		document.addEventListener("mousedown", function(e) {
-        	isMouseDown = true;
-        	handleMouseMove(e);
-        	document.addEventListener("mousemove", handleMouseMove, true);
-    	}, true);
+	var lastPinchTime = 0,curPinchTime = 0,pinchFrequency = 10;
 
-    	document.addEventListener("mouseup", function() {
-        	document.removeEventListener("mousemove", handleMouseMove, true);
-        	isMouseDown = false;
-        	mouseX = undefined;
-        	mouseY = undefined;
-    	}, true);
+	document.addEventListener("mousedown", function(e) {
+       	isMouseDown = true;
+       	handleMouseMove(e);
+       	document.addEventListener("mousemove", handleMouseMove, true);
+    }, true);
 
-    	document.addEventListener("touchstart", function(e) {
-        	isMouseDown = true;
-        	handleMouseMove(e);
-        	document.addEventListener("touchmove", handleMouseMove, true);
-    	}, true);
+    document.addEventListener("mouseup", function() {
+       	document.removeEventListener("mousemove", handleMouseMove, true);
+       	isMouseDown = false;
+       	mouseX = undefined;
+       	mouseY = undefined;
+    }, true);
 
-    	document.addEventListener("touchend", function() {
-        	document.removeEventListener("touchmove", handleMouseMove, true);
-        	isMouseDown = false;
-        	mouseX = undefined;
-        	mouseY = undefined;
-    	}, true);
-	}
-	else
-	{
+    //mobile touch event
+    document.addEventListener("touchstart", function(e) {
+       	isMouseDown = true;
+       	handleMouseMove(e);
+       	document.addEventListener("touchmove", handleMouseMove, true);
+    }, true);
 
-	}
+    document.addEventListener("touchend", function() {
+       	document.removeEventListener("touchmove", handleMouseMove, true);
+       	isMouseDown = false;
+       	mouseX = undefined;
+       	mouseY = undefined;
+    }, true);
+
+    //pinch
+    if(this.mobile)
+    {
+    	hammer = new Hammer(canvas);
+    	hammer.get('pinch').set({ enable: true });
+    	hammer.on("pinchmove",function(ev){
+    		curPinchTime = new Date().getTime();
+    		if(curPinchTime - lastPinchTime>=1000/pinchFrequency)
+    		{
+    			ANEngine.drawScale *= ev.scale;
+    			lastPinchTime = curPinchTime;
+    		}
+    	});
+    }
 
 	function handleMouseMove(e) {
 		if(e.targetTouches)
 			e = e.targetTouches[0];
+		factor = 30/ANEngine.drawScale;
 		var scrollTopLeft = getScrollTopLeft();
         var clientX = e.clientX + scrollTopLeft.Left;
         var clientY = e.clientY + scrollTopLeft.Top;
-        mouseX = factor*(clientX - canvasPosition.x) / 30;
-        mouseY = factor*(clientY - canvasPosition.y) / 30;
+        mouseX = factor*(clientX - canvasPosition.x-ANEngine.offsetX*ANEngine.drawScale) / 30;
+        mouseY = factor*(clientY - canvasPosition.y-ANEngine.offsetY*ANEngine.drawScale) / 30;
         //console.log(mouseX+","+mouseY);
     };
 

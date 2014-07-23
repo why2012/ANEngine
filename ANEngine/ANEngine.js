@@ -8,6 +8,8 @@ var ANEngine = function()
 }
 
 ANEngine.drawScale = 30;//一单位对应30像素
+ANEngine.offsetX = 0;//X平移 camera
+ANEngine.offsetY = 0;//y平移 camera
 ANEngine.fps = 60;
 //物理引擎采用box2d
 ANEngine.physicalEngine = {};
@@ -62,10 +64,14 @@ ANEngine.Scene = function(_canvas)
 			canvas.clearRect(0,0,width,height);
 			if(backgroud!=null)
 				canvas.drawImage(backgroud,0,0,width,height);
+			//camera X,Y重映射
+			canvas.translate(ANEngine.offsetX*ANEngine.drawScale,ANEngine.offsetY*ANEngine.drawScale);
 			for(var index in layers)
 			{
 				layers[index].drawLayer(canvas);
 			}
+			canvas.translate(-ANEngine.offsetX*ANEngine.drawScale,-ANEngine.offsetY*ANEngine.drawScale);
+			//FPS Text
 			canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
 			prevTime = curTime;
 		}

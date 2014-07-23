@@ -17,7 +17,7 @@
 			});
 			document.getElementById("canvas").width = $(window).width();
 			document.getElementById("canvas").height = $(window).height();
-			ANEngine.drawScale = 18;
+			ANEngine.drawScale = 25;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			var spriteA = new ANEngine.Sprite(4,2,2,2);
@@ -139,7 +139,7 @@
 			//spriteE.physicalSkin.setJointTransform(80,20);
 
 			//鼠标控制
-			var baseController = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene.phyWorld);
+			var baseController = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene,true);
 			//渲染
 			setInterval(function(){
 				//向物体物体中心施加力，单位牛
