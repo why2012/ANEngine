@@ -17,8 +17,11 @@
 			});
 			document.getElementById("canvas").width = $(window).width();
 			document.getElementById("canvas").height = $(window).height();
-			ANEngine.drawScale = 25;
+			var camera = new ANEngine.Camera.HoverCamera();
+			//camera.lookAt(-10,-10);
+			//camera.setFar(50);camera.maxVelocityFar = 3;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
+			scene.setCamera(camera);
 			var layer = new ANEngine.Layer();
 			var spriteA = new ANEngine.Sprite(4,2,2,2);
 			var spriteB = new ANEngine.Sprite(3,11,30,2,.3);
@@ -26,6 +29,9 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
+			camera.bind(particle);
+			camera.bindObjOffsetX = 20;
+			camera.bindObjOffsetY = 10;
 			particle.blend = "lighter";
 			var movieClip = new ANEngine.MovieClip(5,3,4,4);
 			//设置物理皮肤

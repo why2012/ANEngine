@@ -18,6 +18,8 @@ ANEngine.physicalEngine.positionIterations = 10;
 ANEngine.physicalEngine.gravity = {x:0,y:10};
 //粒子系统
 ANEngine.Particle = {};
+//摄像机
+ANEngine.Camera = {};
 
 //每帧渲染
 ANEngine.render = function(scene)
@@ -38,6 +40,7 @@ ANEngine.Scene = function(_canvas)
 		var canvas = _canvas.getContext("2d");
 		var layers = new Array();
 		var backgroud = null;
+		var camera = null;
 		this.phyWorld = ANEngine.physicalEngine.createWorld(ANEngine.physicalEngine.gravity.x,ANEngine.physicalEngine.gravity.y);
 
 		//添加图层
@@ -54,6 +57,17 @@ ANEngine.Scene = function(_canvas)
 			backgroud = image;
 		}
 
+		//设置相机
+		this.setCamera = function(_camera)
+		{
+			camera = _camera;
+		}
+
+		this.getCamera = function()
+		{
+			return camera;
+		}
+
 		//场景绘制
 		this.drawScene = function()
 		{
@@ -64,6 +78,14 @@ ANEngine.Scene = function(_canvas)
 			canvas.clearRect(0,0,width,height);
 			if(backgroud!=null)
 				canvas.drawImage(backgroud,0,0,width,height);
+			//应用相机
+			if(camera)
+			{
+				camera.update();
+				ANEngine.drawScale = 900/camera.far;
+				ANEngine.offsetX = -camera.x;
+				ANEngine.offsetY = -camera.y;
+			}
 			//camera X,Y重映射
 			canvas.translate(ANEngine.offsetX*ANEngine.drawScale,ANEngine.offsetY*ANEngine.drawScale);
 			for(var index in layers)
@@ -672,6 +694,72 @@ ANEngine.Particle.Launcher = function()
     this.PUBLIC_G = 1
     this.PUBLIC_B = 1
     this.PUBLIC_A = 1
+}
+
+ANEngine.Camera.BaseCamera = function(_far,_x,_y)
+{
+	this.far = _far||30;
+	this.x = _x==undefined?0:_x;
+	this.y = _y==undefined?0:_y;
+
+	this.update = function(){}
+}
+
+//only lookAt setFar can transform hovercamera
+ANEngine.Camera.HoverCamera = function(_far,_x,_y)
+{
+	ANEngine.Camera.BaseCamera.call(this,_far,_x,_y);
+	var lookAtX = this.x,lookAtY = this.y,lookAtFar = this.far;
+	this.maxVelocity = .5;
+	this.maxVelocityFar = 1;
+	var velocityX = 0,velocityY = 0,velocityFar = 0;
+	var lenX = 0,lenY=0,lenFar=0;
+	var signX=1,signY=1,signF=1;
+	var bindObj = null;
+	this.bindObjOffsetX=0;
+	this.bindObjOffsetY=0;
+
+	this.bind = function(display_obj)
+	{
+		bindObj = display_obj;
+	}
+
+	this.lookAt = function(x,y)
+	{
+		lookAtX = x;
+		lookAtY = y;
+		lenX = Math.abs(lookAtX-this.x)+0.0001;
+		lenY = Math.abs(lookAtY-this.y)+0.0001;
+		signX = Math.floor((lookAtX-this.x)/lenX+0.1);
+		signY = Math.floor((lookAtY-this.y)/lenY+0.1);
+	}
+
+	this.setFar = function(far)
+	{
+		lookAtFar = far;
+		lenFar = Math.abs(lookAtFar-this.far)+0.0001;
+		signF = Math.floor((lookAtFar-this.far)/lenFar+0.1);
+	}
+
+	this.update = function()
+	{
+		if(bindObj)
+		{
+			this.lookAt(bindObj.x-this.bindObjOffsetX,bindObj.y-this.bindObjOffsetY);
+		}
+		var disX = Math.abs(lookAtX-this.x);
+		var disY = Math.abs(lookAtY-this.y);
+		var disFar = Math.abs(lookAtFar-this.far);
+		var movX = lenX-disX;
+		var movY = lenY-disY;
+		var movF = lenFar-disFar;
+		velocityX = (1-movX/lenX)*this.maxVelocity;
+		velocityY = (1-movY/lenY)*this.maxVelocity;
+		velocityFar = (1-movF/lenFar)*this.maxVelocityFar;//console.log(velocityX+","+velocityY+","+velocityFar);
+		this.x += signX*(disX>velocityX?velocityX:disX);
+		this.y += signY*(disY>velocityY?velocityY:disY);
+		this.far += signF*(disFar>velocityFar?velocityFar:disFar);
+	}
 }
 
 /*

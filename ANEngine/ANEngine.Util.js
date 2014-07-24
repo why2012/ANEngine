@@ -23,36 +23,37 @@ ANEngine.Util.BaseController = function(canvas,scene,_mobile)
 	var mouseX, mouseY,mousePVec, isMouseDown, selectedBody, mouseJoint;
 	var canvasPosition = getElementPosition(canvas);
 	var world = scene.phyWorld;
+    var camera = scene.getCamera();
 	this.mobile = _mobile||false;
 	var hammer = null;
 	var lastPinchTime = 0,curPinchTime = 0,pinchFrequency = 10;
 
-	document.addEventListener("mousedown", function(e) {
+	$(document).bind("mousedown", function(e) {
        	isMouseDown = true;
        	handleMouseMove(e);
-       	document.addEventListener("mousemove", handleMouseMove, true);
-    }, true);
+       	$(document).bind("mousemove", handleMouseMove);
+    });
 
-    document.addEventListener("mouseup", function() {
-       	document.removeEventListener("mousemove", handleMouseMove, true);
+    $(document).bind("mouseup", function() {
+       	$(document).unbind("mousemove", handleMouseMove);
        	isMouseDown = false;
        	mouseX = undefined;
        	mouseY = undefined;
-    }, true);
+    });
 
     //mobile touch event
     document.addEventListener("touchstart", function(e) {
        	isMouseDown = true;
        	handleMouseMove(e);
-       	document.addEventListener("touchmove", handleMouseMove, true);
-    }, true);
+       	document.addEventListener("touchmove", handleMouseMove);
+    });
 
     document.addEventListener("touchend", function() {
-       	document.removeEventListener("touchmove", handleMouseMove, true);
+        document.removeEventListener("touchmove", handleMouseMove);
        	isMouseDown = false;
        	mouseX = undefined;
        	mouseY = undefined;
-    }, true);
+    });
 
     //pinch
     if(this.mobile)
@@ -63,7 +64,14 @@ ANEngine.Util.BaseController = function(canvas,scene,_mobile)
     		curPinchTime = new Date().getTime();
     		if(curPinchTime - lastPinchTime>=1000/pinchFrequency)
     		{
-    			ANEngine.drawScale *= ev.scale;
+                if(camera&&camera.setFar)
+                {
+                    camera.setFar(camera.far/ev.scale);
+                }
+                else
+                {
+    			    ANEngine.drawScale *= ev.scale;
+                }
     			lastPinchTime = curPinchTime;
     		}
     	});
