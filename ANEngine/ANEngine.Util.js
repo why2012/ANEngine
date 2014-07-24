@@ -1,6 +1,6 @@
 /*
 	Author:WHY
-	dependences:JQuery
+	dependences:JQuery , Hammer
 */
 ANEngine.Util = {};
 ANEngine.Util.MovieClip = {};
@@ -14,6 +14,99 @@ ANEngine.Util.MovieClip.XmlToJson = function(xml)
 	});
 
 	return json;
+}
+
+//监控资源的加载进度
+ANEngine.Util.LoadMonitor = function()
+{
+    var sources = {};
+    this.onprogress = null;//进度更新回调,参数为已加载资源数和资源总数
+    this.onload = null;//所有资源加载完毕后回调，参数为资源总数
+
+    this.getLoadedSrcNum = function()
+    {
+        var num = 0;
+        for(var i in sources)
+        {
+            if(sources[i].loaded)
+                num++;
+        }
+        return num;
+    }
+
+    this.addImgSource = function(src,callback)
+    {
+        var img = new Image();
+        img.src = src;
+        var _this = this;
+        var _sources = sources;
+        img.onload = function()
+        {
+            callback(img);
+            sources[src].loaded = true;
+            if(_this.onprogress)
+            {
+                var sourcesLen = 0;
+                for(var i in _sources)
+                    sourcesLen++;
+                var loadedNum = _this.getLoadedSrcNum();
+                _this.onprogress(loadedNum,sourcesLen);
+                if(loadedNum==sourcesLen&&_this.onload)
+                {
+                    _this.onload(sourcesLen);
+                }
+            }
+        }
+        sources[src] = {item:img,src:src,loaded:false};
+    }
+
+    this.addJsonSource = function(src,callback)
+    {
+        var _this = this;
+        var _sources = sources;
+        $.getJSON(src,function(json)
+        {
+            callback(json);
+            sources[src].loaded = true;
+            if(_this.onprogress)
+            {
+                var sourcesLen = 0;
+                for(var i in _sources)
+                    sourcesLen++;
+                var loadedNum = _this.getLoadedSrcNum();
+                _this.onprogress(loadedNum,sourcesLen);
+                if(loadedNum==sourcesLen&&_this.onload)
+                {
+                    _this.onload(sourcesLen);
+                }
+            }
+        });
+        sources[src] = {item:null,src:src,loaded:false};
+    }
+
+    this.addOtherSource = function(src,params,callback,type)
+    {
+        var _this = this;
+        var _sources = sources;
+        $.get(src,params,function(s)
+        {
+            callback(s);
+            sources[src].loaded = true;
+            if(_this.onprogress)
+            {
+                var sourcesLen = 0;
+                for(var i in _sources)
+                    sourcesLen++;
+                var loadedNum = _this.getLoadedSrcNum();
+                _this.onprogress(loadedNum,sourcesLen);
+                if(loadedNum==sourcesLen&&_this.onload)
+                {
+                    _this.onload(sourcesLen);
+                }
+            }
+        },type);
+        sources[src] = {item:null,src:src,loaded:false};
+    }
 }
 
 //一个点击拖拽控制器，调用update更新

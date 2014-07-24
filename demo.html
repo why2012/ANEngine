@@ -17,7 +17,10 @@
 			});
 			document.getElementById("canvas").width = $(window).width();
 			document.getElementById("canvas").height = $(window).height();
+			var start = false;
 			var camera = new ANEngine.Camera.HoverCamera();
+			//鼠标控制
+			var baseController = null;
 			//camera.lookAt(-10,-10);
 			//camera.setFar(50);camera.maxVelocityFar = 3;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
@@ -50,54 +53,52 @@
 			phyData.shape = ANEngine.physicalEngine.PhysicsAttr.Shape.Box;
 			movieClip.physicalSkin.setPhysics(phyData);
 
+			var loadMonitor = new ANEngine.Util.LoadMonitor();
 			//设置背景贴图
-			var image = new Image();
-			image.src = "assets/bird2.png";
-			image.onload = function(){
-				spriteA.setChartlet(image);
-			};
-			var image2 = new Image();
-			image2.src = "assets/bird1.png";
-			image2.onload = function(){
-				spriteC.setChartlet(image2);
+			loadMonitor.addImgSource("assets/bird2.png",function(img){
+				spriteA.setChartlet(img);
+			});
+			loadMonitor.addImgSource("assets/bird1.png",function(img){
+				spriteC.setChartlet(img);
 				layer.addAnimItem(spriteC.Clone());
-			};
-			var image3 = new Image();
-			image3.src = "assets/glass.png";
-			image3.onload = function(){
-				spriteB.setChartlet(image3);
-			};
-			var image4 = new Image();
-			image4.src = "assets/wood.png";
-			image4.onload = function(){
-				spriteD.setChartlet(image4);
-			};
-			var image5 = new Image();
-			image5.src = "assets/bird3.png";
-			image5.onload = function(){
-				spriteE.setChartlet(image5);
-			};
-			var image6 = new Image();
-			image6.src = "assets/eff.png";
-			image6.onload = function(){
-				$.get("assets/eff.xml",{},function(xml){
-					particle.setSpriteSheet(image6,ANEngine.Util.MovieClip.XmlToJson(xml),24);
+			});
+			loadMonitor.addImgSource("assets/glass.png",function(img){
+				spriteB.setChartlet(img);
+			});
+			loadMonitor.addImgSource("assets/wood.png",function(img){
+				spriteD.setChartlet(img);
+			});
+			loadMonitor.addImgSource("assets/bird3.png",function(img){
+				spriteE.setChartlet(img);
+			});
+			loadMonitor.addImgSource("assets/eff.png",function(img){
+				loadMonitor.addOtherSource("assets/eff.xml",{},function(xml){
+					particle.setSpriteSheet(img,ANEngine.Util.MovieClip.XmlToJson(xml),24);
 					layer.addAnimItem(particle.Clone());	
 				},"xml");
-			};
-			var spriteimage1 = new Image();
-			spriteimage1.src = "assets/zombie1.png";
-			spriteimage1.onload = function(){
-				$.getJSON("assets/zombie1.json",function(json){
-					movieClip.setSpriteSheet(spriteimage1,json,24);
+			});
+			loadMonitor.addImgSource("assets/zombie1.png",function(img){
+				loadMonitor.addJsonSource("assets/zombie1.json",function(json){
+					movieClip.setSpriteSheet(img,json,24);
 					//console.log(movieClip.totalFrame());
 				});
-			};
-			var bg = new Image();
-			bg.src = "assets/bg.png";
-			bg.onload = function()
+			});
+			loadMonitor.addImgSource("assets/bg.png",function(img){
+				scene.setBG(img);
+			});
+
+			loadMonitor.onprogress = function(num,all)
 			{
-				scene.setBG(bg);
+				//console.log("loaded:"+num+",percent:"+num/all);
+				$("#progressbar").width(100*num/all+"%");
+			}
+
+			loadMonitor.onload = function(all)
+			{
+				//console.log("All loaded("+all+")");
+				start = true;
+				$("canvas").show();
+				baseController  = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene,true);
 			}
 
 			//添加Sprite，图层，物理外形
@@ -144,16 +145,20 @@
 			//移动物体 Joint Transform
 			//spriteE.physicalSkin.setJointTransform(80,20);
 
-			//鼠标控制
-			var baseController = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene,true);
 			//渲染
 			setInterval(function(){
-				//向物体物体中心施加力，单位牛
-				spriteA.physicalSkin.applyForceToCenterPhy(40000,30000);
-				baseController.update();
-				ANEngine.render(scene);
+				if(start)
+				{
+					//向物体物体中心施加力，单位牛
+					spriteA.physicalSkin.applyForceToCenterPhy(40000,30000);
+					baseController.update();
+					ANEngine.render(scene);
+				}
 			},1000/ANEngine.fps);
 		}
 	</script>
-	<canvas id="canvas" style="position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
+	<div style="border:1px solid black;width:300px;height:20px;">
+		<div id="progressbar" style="width:0%;height:inherit;background-color:blue;"></div>
+	</div>
+	<canvas id="canvas" style="display:none;position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
 </body>
