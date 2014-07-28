@@ -32,6 +32,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
+			var container = new ANEngine.Container();
 			camera.bind(particle);
 			camera.bindObjOffsetX = 20;
 			camera.bindObjOffsetY = 10;
@@ -93,9 +94,16 @@
 				$("#progressbar").width(100*num/all+"%");
 			}
 
-			loadMonitor.onload = function(all)
+			loadMonitor.onload = function(len,s)
 			{
+				//console.log(s);
 				//console.log("All loaded("+all+")");
+				var tmp = new ANEngine.Sprite(0,0,2,2);
+				tmp.setChartlet(s["assets/bird1.png"].item);
+				container.addChild(tmp);
+				tmp = new ANEngine.Sprite(3,0,2,2);
+				tmp.setChartlet(s["assets/bird2.png"].item);
+				container.addChild(tmp);
 				start = true;
 				$("canvas").show();
 				baseController  = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene,true);
@@ -109,6 +117,7 @@
 			layer.addAnimItem(spriteE);
 			layer.addAnimItem(movieClip);
 			layer.addAnimItem(particle);
+			layer.addAnimItem(container);
 			scene.addLayer(layer);
 			spriteA.physicalSkin.addToPhyWorld();
 			spriteB.physicalSkin.addToPhyWorld();

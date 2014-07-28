@@ -502,6 +502,30 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	}
 }
 
+//可视元素容器
+ANEngine.Container = function()
+{
+	//[{item:,index:}...]
+	var display_objects = new Array(); 
+
+	this.addChild = function(item,index)
+	{
+		index = index||1;
+		display_objects.push({item:item,index:index});
+		display_objects.sort(function(a,b){
+			return a.index<b.index?1:-1;
+		});
+	}
+
+	this.draw = function(canvas)
+	{
+		for(var i in display_objects)
+		{
+			display_objects[i].item.draw(canvas);
+		}
+	}
+}
+
 //粒子
 ANEngine.Particle.Particle = function(displayObject)
 {

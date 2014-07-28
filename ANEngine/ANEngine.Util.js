@@ -19,6 +19,7 @@ ANEngine.Util.MovieClip.XmlToJson = function(xml)
 //监控资源的加载进度
 ANEngine.Util.LoadMonitor = function()
 {
+    //{{item,src,loaded}...}
     var sources = {};
     this.onprogress = null;//进度更新回调,参数为已加载资源数和资源总数
     this.onload = null;//所有资源加载完毕后回调，参数为资源总数
@@ -53,7 +54,7 @@ ANEngine.Util.LoadMonitor = function()
                 _this.onprogress(loadedNum,sourcesLen);
                 if(loadedNum==sourcesLen&&_this.onload)
                 {
-                    _this.onload(sourcesLen);
+                    _this.onload(sourcesLen,_sources);
                 }
             }
         }
@@ -67,6 +68,7 @@ ANEngine.Util.LoadMonitor = function()
         $.getJSON(src,function(json)
         {
             callback(json);
+            sources[src].item = json;
             sources[src].loaded = true;
             if(_this.onprogress)
             {
@@ -77,7 +79,7 @@ ANEngine.Util.LoadMonitor = function()
                 _this.onprogress(loadedNum,sourcesLen);
                 if(loadedNum==sourcesLen&&_this.onload)
                 {
-                    _this.onload(sourcesLen);
+                    _this.onload(sourcesLen,_sources);
                 }
             }
         });
@@ -91,6 +93,7 @@ ANEngine.Util.LoadMonitor = function()
         $.get(src,params,function(s)
         {
             callback(s);
+            sources[src].item = s;
             sources[src].loaded = true;
             if(_this.onprogress)
             {
@@ -101,7 +104,7 @@ ANEngine.Util.LoadMonitor = function()
                 _this.onprogress(loadedNum,sourcesLen);
                 if(loadedNum==sourcesLen&&_this.onload)
                 {
-                    _this.onload(sourcesLen);
+                    _this.onload(sourcesLen,_sources);
                 }
             }
         },type);
