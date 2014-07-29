@@ -32,7 +32,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
-			var container = new ANEngine.Container();
+			var container = new ANEngine.physicalEngine.Container(scene.phyWorld);
 			camera.bind(particle);
 			camera.bindObjOffsetX = 20;
 			camera.bindObjOffsetY = 10;
@@ -98,12 +98,6 @@
 			{
 				//console.log(s);
 				//console.log("All loaded("+all+")");
-				var tmp = new ANEngine.Sprite(0,0,2,2);
-				tmp.setChartlet(s["assets/bird1.png"].item);
-				container.addChild(tmp);
-				tmp = new ANEngine.Sprite(3,0,2,2);
-				tmp.setChartlet(s["assets/bird2.png"].item);
-				container.addChild(tmp);
 				start = true;
 				$("canvas").show();
 				baseController  = new ANEngine.Util.BaseController(document.getElementById("canvas"),scene,true);
@@ -140,6 +134,14 @@
 			spriteE.drawBorder = true;
 			movieClip.drawBorder = true;
 
+			//joint
+			var bridge = new ANEngine.physicalEngine.ComplexShape.BridgeShape();
+			container.addChild(spriteA);
+			container.addChild(spriteC);
+			container.addChild(movieClip);
+			container.addChild(particle);
+			container.createPhysicalShape(bridge);
+			//container.destroyPhysicalShape();
 			//spriteC.alpha(.5);
 			//spriteC.scale(.5,.5);
 			//layer.removeAnimItem(spriteC);

@@ -20,6 +20,8 @@ ANEngine.physicalEngine.gravity = {x:0,y:10};
 ANEngine.Particle = {};
 //摄像机
 ANEngine.Camera = {};
+//复杂组合体
+ANEngine.physicalEngine.ComplexShape = {};
 
 //每帧渲染
 ANEngine.render = function(scene)
@@ -502,30 +504,6 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	}
 }
 
-//可视元素容器
-ANEngine.Container = function()
-{
-	//[{item:,index:}...]
-	var display_objects = new Array(); 
-
-	this.addChild = function(item,index)
-	{
-		index = index||1;
-		display_objects.push({item:item,index:index});
-		display_objects.sort(function(a,b){
-			return a.index<b.index?1:-1;
-		});
-	}
-
-	this.draw = function(canvas)
-	{
-		for(var i in display_objects)
-		{
-			display_objects[i].item.draw(canvas);
-		}
-	}
-}
-
 //粒子
 ANEngine.Particle.Particle = function(displayObject)
 {
@@ -748,6 +726,11 @@ ANEngine.Camera.HoverCamera = function(_far,_x,_y)
 		bindObj = display_obj;
 	}
 
+	this.unbind = function()
+	{
+		bindObj = null;
+	}
+
 	this.lookAt = function(x,y)
 	{
 		lookAtX = x;
@@ -804,6 +787,7 @@ ANEngine.physicalEngine.Box2d = {
     b2MouseJointDef:Box2D.Dynamics.Joints.b2MouseJointDef,
     b2Transform:Box2D.Common.Math.b2Transform,
     b2Mat22:Box2D.Common.Math.b2Mat22,
+    b2RevoluteJointDef:Box2D.Dynamics.Joints.b2RevoluteJointDef,
 };
 
 ANEngine.physicalEngine.PhysicsAttr = {
@@ -987,6 +971,101 @@ ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
 			}
 		}
 }
+
+//物理容器
+ANEngine.physicalEngine.Container = function(_phyWorld)
+{
+	//[{item:,index:}...]
+	var display_objects = new Array();
+	this.physicalShape = null; 
+	this.phyWorld = _phyWorld;
+
+	this.addChild = function(item,index)
+	{
+		index = index||1;
+		display_objects.push({item:item,index:index});
+		display_objects.sort(function(a,b){
+			return a.index<b.index?1:-1;
+		});
+	}
+
+	this.border = function(border_on)
+	{
+		for(var i in display_objects)
+		{
+			display_objects[i].item.drawBorder = border_on;
+		}
+	}
+
+	//暂时保留
+	this.draw = function(canvas)
+	{
+		for(var i in display_objects)
+		{
+			display_objects[i].item.draw(canvas);
+		}
+	}
+
+	this.createPhysicalShape = function(physhape)
+	{
+		this.physicalShape = physhape.initialize(display_objects,this.phyWorld);
+	}
+
+	this.destroyPhysicalShape = function()
+	{
+		if(this.physicalShape)
+		{
+			for(var i in this.physicalShape.joints)
+				this.phyWorld.DestroyJoint(this.physicalShape.joints[i]);
+		}
+	}
+}
+
+//物理形状
+ANEngine.physicalEngine.ComplexShape.PhysicalShape = function()
+{
+	this.display_objects = null;
+	this.body_array = new Array();
+	this.phyWorld = null;
+
+	this._initialize = function(_display_objects,_phyWorld)
+	{
+		this.phyWorld = _phyWorld;
+		this.display_objects = _display_objects;
+		return this;
+	}
+
+	this.initialize = function(_display_objects,_phyWorld)
+	{
+		return this._initialize(_display_objects);
+	}
+}
+
+//桥
+ANEngine.physicalEngine.ComplexShape.BridgeShape = function()
+{
+	ANEngine.physicalEngine.ComplexShape.PhysicalShape.call(this);
+	var Box2d = ANEngine.physicalEngine.Box2d;
+	var jointDef = null;
+	this.joints = new Array();
+
+	this.initialize = function(_display_objects,_phyWorld)
+	{
+		this._initialize(_display_objects,_phyWorld);
+		if(this.display_objects.length==1)
+			return this;
+		jointDef = new Box2d.b2RevoluteJointDef();
+		for(var i=0;i<this.display_objects.length-1;i++)
+		{
+			jointDef.Initialize(this.display_objects[i].item.physicalSkin.getPhyAttr().body,
+				this.display_objects[i+1].item.physicalSkin.getPhyAttr().body,
+				this.display_objects[i+1].item.physicalSkin.getPhyAttr().body.GetPosition());
+			this.joints.push(this.phyWorld.CreateJoint(jointDef));
+		}
+		return this;
+	}
+}
+
 
 ANEngine.physicalEngine.createWorld = function(direcX,direcY)
 {
