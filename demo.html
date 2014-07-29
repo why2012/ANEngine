@@ -136,10 +136,11 @@
 
 			//joint
 			var bridge = new ANEngine.physicalEngine.ComplexShape.BridgeShape();
-			container.addChild(spriteA);
+			/*container.addChild(spriteA);
 			container.addChild(spriteC);
 			container.addChild(movieClip);
-			container.addChild(particle);
+			container.addChild(particle);*/
+			container.addChildren([{item:spriteA,index:1},{item:spriteC,index:1},{item:movieClip,index:1},{item:particle,index:1}]);
 			container.createPhysicalShape(bridge);
 			//container.destroyPhysicalShape();
 			//spriteC.alpha(.5);

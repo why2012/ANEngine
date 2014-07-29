@@ -989,6 +989,14 @@ ANEngine.physicalEngine.Container = function(_phyWorld)
 		});
 	}
 
+	this.addChildren = function(children)
+	{
+		display_objects = display_objects.concat(children);
+		display_objects.sort(function(a,b){
+			return a.index<b.index?1:-1;
+		});
+	}
+
 	this.border = function(border_on)
 	{
 		for(var i in display_objects)
