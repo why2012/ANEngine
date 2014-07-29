@@ -13,8 +13,8 @@ ANEngine.offsetY = 0;//y平移 camera
 ANEngine.fps = 60;
 //物理引擎采用box2d
 ANEngine.physicalEngine = {};
-ANEngine.physicalEngine.velocityIterations = 10;
-ANEngine.physicalEngine.positionIterations = 10;
+ANEngine.physicalEngine.velocityIterations = 8;
+ANEngine.physicalEngine.positionIterations = 3;
 ANEngine.physicalEngine.gravity = {x:0,y:10};
 //粒子系统
 ANEngine.Particle = {};
@@ -980,21 +980,25 @@ ANEngine.physicalEngine.Container = function(_phyWorld)
 	this.physicalShape = null; 
 	this.phyWorld = _phyWorld;
 
-	this.addChild = function(item,index)
+	this.addChild = function(item,index,sort)
 	{
 		index = index||1;
+		sort = sort==undefined?true:sort;
 		display_objects.push({item:item,index:index});
-		display_objects.sort(function(a,b){
-			return a.index<b.index?1:-1;
-		});
+		if(sort)
+			display_objects.sort(function(a,b){
+				return b.index-a.index;
+			});
 	}
 
-	this.addChildren = function(children)
+	this.addChildren = function(children,sort)
 	{
 		display_objects = display_objects.concat(children);
-		display_objects.sort(function(a,b){
-			return a.index<b.index?1:-1;
-		});
+		sort = sort==undefined?true:sort;
+		if(sort)
+			display_objects.sort(function(a,b){
+				return b.index-a.index;
+			});
 	}
 
 	this.border = function(border_on)
@@ -1049,12 +1053,13 @@ ANEngine.physicalEngine.ComplexShape.PhysicalShape = function()
 	}
 }
 
-//桥
+//桥 set config.anchor_offset={x:x,y:y} to change bridge node anchor point
 ANEngine.physicalEngine.ComplexShape.BridgeShape = function()
 {
 	ANEngine.physicalEngine.ComplexShape.PhysicalShape.call(this);
 	var Box2d = ANEngine.physicalEngine.Box2d;
 	var jointDef = null;
+	this.config = {};
 	this.joints = new Array();
 
 	this.initialize = function(_display_objects,_phyWorld)
@@ -1063,11 +1068,24 @@ ANEngine.physicalEngine.ComplexShape.BridgeShape = function()
 		if(this.display_objects.length==1)
 			return this;
 		jointDef = new Box2d.b2RevoluteJointDef();
+		for(var i in this.config)
+			jointDef[i] = this.config[i];
+		if(!this.config.anchor_offset)
+			this.config.anchor_offset = {};
+		if(!this.config.anchor_offset.x)
+			this.config.anchor_offset.x = 0;
+		if(!this.config.anchor_offset.y)
+			this.config.anchor_offset.y = 0;
+		var _x=0,_y=0;
 		for(var i=0;i<this.display_objects.length-1;i++)
 		{
+			var anchor = this.display_objects[i+1].item.physicalSkin.getPhyAttr().body.GetPosition();
+			anchor.x = anchor.x - this.config.anchor_offset.x-_x;
+			anchor.y = anchor.y - this.config.anchor_offset.y-_y;
+			_x = _x + this.config.anchor_offset.x;_y = _y + this.config.anchor_offset.y;
 			jointDef.Initialize(this.display_objects[i].item.physicalSkin.getPhyAttr().body,
 				this.display_objects[i+1].item.physicalSkin.getPhyAttr().body,
-				this.display_objects[i+1].item.physicalSkin.getPhyAttr().body.GetPosition());
+				anchor);
 			this.joints.push(this.phyWorld.CreateJoint(jointDef));
 		}
 		return this;

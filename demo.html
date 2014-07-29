@@ -136,11 +136,27 @@
 
 			//joint
 			var bridge = new ANEngine.physicalEngine.ComplexShape.BridgeShape();
+			bridge.config = {lowerAngle:-15 / (180/Math.PI),
+				upperAngle:15 / (180/Math.PI),
+				enableLimit :true,
+				anchor_offset:{x:.1}};
 			/*container.addChild(spriteA);
 			container.addChild(spriteC);
 			container.addChild(movieClip);
 			container.addChild(particle);*/
-			container.addChildren([{item:spriteA,index:1},{item:spriteC,index:1},{item:movieClip,index:1},{item:particle,index:1}]);
+			//container.addChildren([{item:spriteA,index:1},{item:spriteC,index:1},{item:movieClip,index:1},{item:particle,index:1}]);
+			var nodeNum = 40,_x=13,_y=0;
+			phyData.density = 10;
+			for(var i=0;i<nodeNum;i++)
+			{
+				var sprite = new ANEngine.Sprite(_x,_y,1,.5);
+				_x = _x + 1;
+				sprite.physicalSkin.setPhysics(phyData);
+				layer.addAnimItem(sprite);
+				sprite.physicalSkin.addToPhyWorld();
+				container.addChild(sprite,1,false);
+			}
+			container.border(true);
 			container.createPhysicalShape(bridge);
 			//container.destroyPhysicalShape();
 			//spriteC.alpha(.5);
