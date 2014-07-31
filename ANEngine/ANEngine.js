@@ -36,69 +36,70 @@ ANEngine.Scene = function(_canvas)
 {
 	var prevTime = 0;
 	var curTime = 0;
-		var width = _canvas.width;
-		var height = _canvas.height;
+	var width = _canvas.width;
+	var height = _canvas.height;
+	this.canvas = _canvas;
+	this.whFactor = width/height;
+	var canvas = _canvas.getContext("2d");
+	var layers = new Array();
+	var backgroud = null;
+	var camera = null;
+	this.phyWorld = ANEngine.physicalEngine.createWorld(ANEngine.physicalEngine.gravity.x,ANEngine.physicalEngine.gravity.y);
+
+	//添加图层
+	this.addLayer = function(layer)
+	{
+		layer.setPhyWorld(this.phyWorld);
+		layers.push(layer);
+		layer.scene = this;
+	}
+
+	//设置背景
+	this.setBG = function(image)
+	{
+		backgroud = image;
+	}
+
+	//设置相机
+	this.setCamera = function(_camera)
+	{
+		camera = _camera;
+	}
+
+	this.getCamera = function()
+	{
+		return camera;
+	}
+
+	//场景绘制
+	this.drawScene = function()
+	{
+		curTime = new Date().getTime()
+		width = _canvas.width
+		height = _canvas.height;
 		this.whFactor = width/height;
-		var canvas = _canvas.getContext("2d");
-		var layers = new Array();
-		var backgroud = null;
-		var camera = null;
-		this.phyWorld = ANEngine.physicalEngine.createWorld(ANEngine.physicalEngine.gravity.x,ANEngine.physicalEngine.gravity.y);
-
-		//添加图层
-		this.addLayer = function(layer)
+		canvas.clearRect(0,0,width,height);
+		if(backgroud!=null)
+			canvas.drawImage(backgroud,0,0,width,height);
+		//应用相机
+		if(camera)
 		{
-			layer.setPhyWorld(this.phyWorld);
-			layers.push(layer);
-			layer.scene = this;
+			camera.update();
+			ANEngine.drawScale = 900/camera.far;
+			ANEngine.offsetX = -camera.x;
+			ANEngine.offsetY = -camera.y;
 		}
-
-		//设置背景
-		this.setBG = function(image)
+		//camera X,Y重映射
+		canvas.translate(ANEngine.offsetX*ANEngine.drawScale,ANEngine.offsetY*ANEngine.drawScale);
+		for(var index in layers)
 		{
-			backgroud = image;
+			layers[index].drawLayer(canvas);
 		}
-
-		//设置相机
-		this.setCamera = function(_camera)
-		{
-			camera = _camera;
-		}
-
-		this.getCamera = function()
-		{
-			return camera;
-		}
-
-		//场景绘制
-		this.drawScene = function()
-		{
-			curTime = new Date().getTime()
-			width = _canvas.width
-			height = _canvas.height;
-			this.whFactor = width/height;
-			canvas.clearRect(0,0,width,height);
-			if(backgroud!=null)
-				canvas.drawImage(backgroud,0,0,width,height);
-			//应用相机
-			if(camera)
-			{
-				camera.update();
-				ANEngine.drawScale = 900/camera.far;
-				ANEngine.offsetX = -camera.x;
-				ANEngine.offsetY = -camera.y;
-			}
-			//camera X,Y重映射
-			canvas.translate(ANEngine.offsetX*ANEngine.drawScale,ANEngine.offsetY*ANEngine.drawScale);
-			for(var index in layers)
-			{
-				layers[index].drawLayer(canvas);
-			}
-			canvas.translate(-ANEngine.offsetX*ANEngine.drawScale,-ANEngine.offsetY*ANEngine.drawScale);
-			//FPS Text
-			canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
-			prevTime = curTime;
-		}
+		canvas.translate(-ANEngine.offsetX*ANEngine.drawScale,-ANEngine.offsetY*ANEngine.drawScale);
+		//FPS Text
+		canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
+		prevTime = curTime;
+	}
 }
 
 
@@ -513,9 +514,6 @@ ANEngine.Particle.Particle = function(displayObject)
     this.PUBLIC_SCALEY_VALUE = 0;
  
     this.PUBLIC_A_VALUE = 0
-    this.PUBLIC_R_VALUE = 0
-    this.PUBLIC_G_VALUE = 0
-    this.PUBLIC_B_VALUE = 0;
  
     this.PUBLIC_ANGLE_VALUE = 0;
     this.PUBLIC_ROTATION_VALUE = 0
@@ -538,10 +536,6 @@ ANEngine.Particle.Particle = function(displayObject)
  
         //所有属性加上某个值
         this.dObject.alpha = this.dObject.alpha+this.PUBLIC_ALPHA_VALUE;
-        /*this.quad.r+=this.PUBLIC_R_VALUE;
-        this.quad.g+=this.PUBLIC_G_VALUE;
-        this.quad.b+=this.PUBLIC_B_VALUE;
-        this.quad.a+=this.PUBLIC_A_VALUE;*/
  
         //如果透明度小于0就清理粒子
         if (this.dObject.alpha<= 0)
@@ -557,10 +551,6 @@ ANEngine.Particle.Particle = function(displayObject)
         this.dObject.alpha = 1;
         this.dObject.scaleX = 1;
         this.dObject.scaleX = 1;
-        /*this.quad.r=1
-        this.quad.g=1
-        this.quad.b=1
-        this.quad.a=1*/
         this.PUBLIC_START = true;
     }
 
@@ -594,36 +584,17 @@ ANEngine.Particle.ParticleEmitter = function(displayObject,pLauncher,pNum)
 	{
 		for(var i in particles)
 		{
-			if (!this.list[i].PUBLIC_START)
-            {
-                //填充粒子属性
-                var particle = particle[i];
-                particle.show();
-				var o = particle.dObject;
-				o.x = launcher.PUBLIC_X + Math.random() * launcher.PUBLIC_SCOPE_X - launcher.PUBLIC_SCOPE_X / 2;
-				o.y = launcher.PUBLIC_Y + Math.random() * launcher.PUBLIC_SCOPE_Y - launcher.PUBLIC_SCOPE_Y / 2;
-
-                particle.PUBLIC_A_VALUE = this.launcher.PUBLIC_A_VALUE;
-                particle.PUBLIC_R_VALUE = this.launcher.PUBLIC_R_VALUE;
-                particle.PUBLIC_G_VALUE = this.launcher.PUBLIC_G_VALUE;
-                particle.PUBLIC_B_VALUE = this.launcher.PUBLIC_B_VALUE;
+            //填充粒子属性
+            var particle = particle[i];
+            particle.show();
+            particle.PUBLIC_A_VALUE = this.launcher.PUBLIC_A_VALUE;
  
-                particle.PUBLIC_ANGLE_VALUE = this.launcher.PUBLIC_ANGLE_VALUE;
-                particle.PUBLIC_ALPHA_VALUE = this.launcher.PUBLIC_ALPHA_VALUE;
-                particle.PUBLIC_SCALEX_VALUE = this.launcher.PUBLIC_SCALEX_VALUE;
-                particle.PUBLIC_SCALEY_VALUE = this.launcher.PUBLIC_SCALEY_VALUE;
- 
-                /*o.a=this.launcher.PUBLIC_A;
-                o.r=this.launcher.PUBLIC_R;
-                o.g=this.launcher.PUBLIC_G;
-                o.b=this.launcher.PUBLIC_B;*/
- 
-                o.rotate = this.launcher.PUBLIC_ROTATION_VAlUE;
- 
-                particle.PUBLIC_ROTATION_VALUE = this.launcher.PUBLIC_ROTATION_VAlUE + Math.random() * this.launcher.PUBLIC_ROTATION_RANDOM;
-                particle.PUBLIC_SPEED_VALUE = this.launcher.PUBLIC_SPEED_VALUE;
-                break;
-            }
+            particle.PUBLIC_ANGLE_VALUE = this.launcher.PUBLIC_ANGLE_VALUE;
+            particle.PUBLIC_ALPHA_VALUE = this.launcher.PUBLIC_ALPHA_VALUE;
+            particle.PUBLIC_SCALEX_VALUE = this.launcher.PUBLIC_SCALEX_VALUE;
+            particle.PUBLIC_SCALEY_VALUE = this.launcher.PUBLIC_SCALEY_VALUE;
+            particle.PUBLIC_ROTATION_VALUE = this.launcher.PUBLIC_ROTATION_VAlUE + Math.random() * this.launcher.PUBLIC_ROTATION_RANDOM;
+            particle.PUBLIC_SPEED_VALUE = this.launcher.PUBLIC_SPEED_VALUE;
 		}
 	}
 
@@ -670,12 +641,6 @@ ANEngine.Particle.Launcher = function()
     //粒子Y比例缩放值
     this.PUBLIC_SCALEY_VALUE =0;
  
-    //粒子初始化颜色参数
-    this.PUBLIC_A_VALUE = 0;
-    this.PUBLIC_R_VALUE = 0;
-    this.PUBLIC_G_VALUE = 0;
-    this.PUBLIC_B_VALUE = 0;
- 
     //粒子角度递增值
     this.PUBLIC_ANGLE_VALUE = 0;
  
@@ -692,9 +657,6 @@ ANEngine.Particle.Launcher = function()
     this.PUBLIC_ALPHA_VALUE=1;
  
     //粒子递增颜色值
-    this.PUBLIC_R = 1
-    this.PUBLIC_G = 1
-    this.PUBLIC_B = 1
     this.PUBLIC_A = 1
 }
 

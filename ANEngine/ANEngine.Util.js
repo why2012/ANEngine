@@ -16,6 +16,19 @@ ANEngine.Util.MovieClip.XmlToJson = function(xml)
 	return json;
 }
 
+ANEngine.Util.Window = function(){}
+ANEngine.Util.Window.FullScreen = function(scene)
+{
+    var canvas = scene.canvas;
+    $(window).resize(function()
+    {
+        canvas.width = $(window).width();
+        canvas.height = $(window).height();      
+    });
+    canvas.width = $(window).width();
+    canvas.height = $(window).height();
+}
+
 //监控资源的加载进度
 ANEngine.Util.LoadMonitor = function()
 {
