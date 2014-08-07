@@ -202,8 +202,8 @@ ANEngine.Layer = function()
 		for(var a in animItemPool)
 		{
 			//mouseup事件与鼠标位置无关
-			pos.x = animItemPool[a].x;
-			pos.y = animItemPool[a].y;
+			pos.x = animItemPool[a].x+animItemPool[a].width()/2;
+			pos.y = animItemPool[a].y+animItemPool[a].height()/2;
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
 				return true;
 		}
@@ -468,16 +468,21 @@ ANEngine.Event.MouseEventDetector = function(dom)
 			throw "Object must extend from EventDispatcher";
 		else
 		{
-			var mx=pos.x,my=pos.y;
-			var x1=obj.x,y1=obj.y;
-			var x2=obj.x+obj.width(),y2=obj.y+obj.height();
-			if(mx>=x1&&my>=y1&&mx<=x2&&my<=y2)
+			var width = obj.width(),height = obj.height();
+			var pivotX = width/2+obj.x;
+			var pivotY = height/2+obj.y;
+			var mx=pos.x-pivotX,my=pivotY-pos.y;
+			var xcos=mx*Math.cos(obj.rotate),xsin=mx*Math.sin(obj.rotate),ycos=my*Math.cos(obj.rotate),ysin=my*Math.sin(obj.rotate);
+			mx=xcos-ysin;my=xsin+ycos;
+			var x1=-width/2,y1=height/2;
+			var x2=width/2,y2=-height/2;
+			if(mx>=x1&&my>=y2&&mx<=x2&&my<=y1)
 			{
 				if(!reverse)
 				{
 					var event = new ANEngine.Event.Event(eventname,obj);
-					event.x = mx;
-					event.y = my;
+					event.x = pos.x;
+					event.y = pos.y;
 					obj.dispatchEvent(event);
 					return true;
 				}

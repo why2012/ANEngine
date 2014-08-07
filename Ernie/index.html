@@ -15,7 +15,7 @@
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
-			var button = new ANEngine.Sprite(5,5,5,1);
+			var button = new ANEngine.Sprite(5,5,5,1);button.rotate = 5;button.drawBorder = true;
 			ANEngine.Util.Window.FullScreen(scene);
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
 			loadMonitor.addImgSource("../assets/wood.png",function(img){
