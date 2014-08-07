@@ -6,7 +6,7 @@ var ANEngine = function()
 {
 
 }
-
+ANEngine.Platform = "desktop";//or mobile or both
 ANEngine.drawScale = 30;//一单位对应30像素
 ANEngine.offsetX = 0;//X平移 camera
 ANEngine.offsetY = 0;//y平移 camera
@@ -22,6 +22,10 @@ ANEngine.Particle = {};
 ANEngine.Camera = {};
 //复杂组合体
 ANEngine.physicalEngine.ComplexShape = {};
+//事件
+ANEngine.Event = {};
+//控件
+ANEngine.Widget = {};
 
 //每帧渲染
 ANEngine.render = function(scene)
@@ -45,6 +49,60 @@ ANEngine.Scene = function(_canvas)
 	var backgroud = null;
 	var camera = null;
 	this.phyWorld = ANEngine.physicalEngine.createWorld(ANEngine.physicalEngine.gravity.x,ANEngine.physicalEngine.gravity.y);
+	var mouseEventDetector = new ANEngine.Event.MouseEventDetector(_canvas);
+	mouseEventDetector.onclick = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.onclick(e,pos))
+				break;
+		}
+	}
+
+	mouseEventDetector.mousedown = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.mousedown(e,pos))
+				break;
+		}
+	}
+
+	mouseEventDetector.mouseup = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.mouseup(e,pos))
+				break;
+		}
+	}
+
+	mouseEventDetector.mouseover = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.mouseover(e,pos))
+				break;
+		}
+	}
+
+	mouseEventDetector.mousemove = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.mousemove(e,pos))
+				break;
+		}
+	}
+
+	mouseEventDetector.mousemoveout = function(e,pos)
+	{
+		for(var l in layers)
+		{
+			if(layers[l].mouseEventDetector.mousemoveout(e,pos))
+				break;
+		}
+	}
 
 	//添加图层
 	this.addLayer = function(layer)
@@ -105,88 +163,343 @@ ANEngine.Scene = function(_canvas)
 
 ANEngine.Layer = function()
 {
-		/*
-			sprite或其他可视元素池;
-			animItem
+	/*
+		sprite或其他可视元素池;
+		animItem
+		{
+			function draw(canvas);
+		}
+	*/
+	var animItemPool = new Array();
+	var phyWorld = null;
+	this.scene = null;
+	this.mouseEventDetector = new ANEngine.Event.MouseEventDetector();
+	var _this = this;
+	this.mouseEventDetector.onclick = function(e,pos)
+	{
+		for(var a in animItemPool)
+		{
+			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"click"))
+				return true;
+		}
+
+		return false;
+	}
+
+	this.mouseEventDetector.mousedown = function(e,pos)
+	{
+		for(var a in animItemPool)
+		{
+			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
+				return true;
+		}
+
+		return false;
+	}
+
+	this.mouseEventDetector.mouseup = function(e,pos)
+	{
+		for(var a in animItemPool)
+		{
+			//mouseup事件与鼠标位置无关
+			pos.x = animItemPool[a].x;
+			pos.y = animItemPool[a].y;
+			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
+				return true;
+		}
+
+		return false;
+	}
+
+	this.mouseEventDetector.mouseover = function(e,pos)
+	{
+		for(var a in animItemPool)
+		{
+			if(!animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseover"))
 			{
-				function draw(canvas);
+				return true;
 			}
-		*/
-		var animItemPool = new Array();
-		var phyWorld = null;
-		this.scene = null;
-
-		this.setPhyWorld = function(world)
-		{
-			phyWorld = world;
 		}
 
-		//添加可视元素
-		this.addAnimItem = function(animItem)
-		{
-			animItemPool.push(animItem);
-			animItem.layer = this;
-		}
+		return false;
+	}
 
-		//移除元素
-		this.removeAnimItem = function(animItem)
+	this.mouseEventDetector.mousemoveout = function(e,pos)
+	{
+		for(var a in animItemPool)
 		{
-			var index = animItemPool.indexOf(animItem);
-			if(index!=-1)
+			if(animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemoveout",true))
 			{
-				animItemPool.splice(index,1);
-				return animItem;
+				return true;
 			}
-
-			return null;
 		}
 
-		//添加可视元素的物理外形
-		this.addAnimItemPhy = function(animItem)
+		return false;
+	}
+
+	this.mouseEventDetector.mousemove = function(e,pos)
+	{
+		for(var a in animItemPool)
+		{
+			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemove"))
+			{
+				animItemPool[a].mouse_on_me = true;
+				return true;
+			}
+			else
+				animItemPool[a].mouse_on_me = false;
+
+		}
+
+		return false;
+	}
+
+	this.setPhyWorld = function(world)
+	{
+		phyWorld = world;
+	}
+
+	//添加可视元素
+	this.addAnimItem = function(animItem)
+	{
+		animItemPool.push(animItem);
+		animItem.layer = this;
+	}
+
+	//移除元素
+	this.removeAnimItem = function(animItem)
+	{
+		var index = animItemPool.indexOf(animItem);
+		if(index!=-1)
+		{
+			animItemPool.splice(index,1);
+			return animItem;
+		}
+
+		return null;
+	}
+
+	//添加可视元素的物理外形
+	this.addAnimItemPhy = function(animItem)
+	{
+		var phyAttr = animItem.getPhyAttr();
+		if(phyWorld!=null&&phyAttr.body==null)
+		{
+			phyAttr.body = phyWorld.CreateBody(phyAttr.bodyDef);
+			phyAttr.body.CreateFixture(phyAttr.fixture);
+		}
+	}
+
+	//更新可视元素的物理外形
+	this.updateAnimItemPhy = function(animItem)
+	{
+		if(phyWorld!=null)
 		{
 			var phyAttr = animItem.getPhyAttr();
-			if(phyWorld!=null&&phyAttr.body==null)
-			{
-				phyAttr.body = phyWorld.CreateBody(phyAttr.bodyDef);
-				phyAttr.body.CreateFixture(phyAttr.fixture);
-			}
+			phyWorld.DestroyBody(phyAttr.body);
+			phyAttr.body = phyWorld.CreateBody(phyAttr.bodyDef);
+			phyAttr.body.CreateFixture(phyAttr.fixture);
 		}
+	}
 
-		//更新可视元素的物理外形
-		this.updateAnimItemPhy = function(animItem)
+	//删除可视元素的物理外形
+	this.destroyAnimItemPhy = function(animItem)
+	{
+		var phyAttr = animItem.getPhyAttr();
+		if(phyWorld!=null&&phyAttr.body!=null)
 		{
-			if(phyWorld!=null)
-			{
-				var phyAttr = animItem.getPhyAttr();
-				phyWorld.DestroyBody(phyAttr.body);
-				phyAttr.body = phyWorld.CreateBody(phyAttr.bodyDef);
-				phyAttr.body.CreateFixture(phyAttr.fixture);
-			}
+			phyWorld.DestroyBody(phyAttr.body);
+			phyAttr.body = null;
 		}
+	}
 
-		//删除可视元素的物理外形
-		this.destroyAnimItemPhy = function(animItem)
+	this.drawLayer = function(canvas)
+	{
+		for(var index in animItemPool)
 		{
-			var phyAttr = animItem.getPhyAttr();
-			if(phyWorld!=null&&phyAttr.body!=null)
-			{
-				phyWorld.DestroyBody(phyAttr.body);
-				phyAttr.body = null;
-			}
+			animItemPool[index].draw(canvas);
 		}
+	}
+}
 
-		this.drawLayer = function(canvas)
+ANEngine.Event.EventDispatcher = function(_obj)
+{
+	//{name:"",func:function}
+	var events = {};
+	var target = _obj;
+
+	this.addEvent = function(name,func)
+	{
+		events[name] = {name:name,func:func};
+	}
+
+	this.removeEvent = function(name)
+	{
+		events[name] = null;
+	}
+
+	this.dispatchEvent = function(event)
+	{
+		if(events[event.name])
 		{
-			for(var index in animItemPool)
-			{
-				animItemPool[index].draw(canvas);
-			}
+			events[event.name].func(event);
 		}
+	}
+}
+
+ANEngine.Event.Event = function(_name,_target)
+{
+	this.name = _name;
+	this.target = _target;
+}
+
+//click mousedown mouseup mouseover mousemoveout
+//移动平台click事件用mouseup事件代替
+ANEngine.Event.MouseEventDetector = function(dom)
+{
+	this.onclick = null;
+	this.mousedown = null;
+	this.mouseup = null;
+	this.mouseover = null;
+	this.mousemove = null;
+	this.mousemoveout = null;
+	var _this = this;
+
+	var getScrollTopLeft = function() 
+    { 
+    	var scrollPos={}; 
+    	if (typeof window.pageYOffset != undefined) { 
+        	scrollPos.Top = window.pageYOffset;
+        	scrollPos.Left = window.pageXOffset;
+    	} 
+    	else if (typeof document.compatMode != undefined
+    	 && document.compatMode != 'BackCompat') { 
+        	scrollPos.Top = document.documentElement.scrollTop; 
+        	scrollPos.Left = document.documentElement.scrollLeft; 
+    	} 
+    	else if (typeof document.body != undefined) { 
+        	scrollPos.Top = document.body.scrollTop; 
+        	scrollPos.Left = document.body.scrollLeft; 
+    	} 
+    	return scrollPos; 
+	}
+
+	var click = function(e)
+	{
+		if(e.targetTouches)
+			e = e.targetTouches[0];
+		if(_this.onclick)
+			_this.onclick(e,scaledPos(e));
+	}
+
+	var mousedown = function(e)
+	{
+		if(e.targetTouches)
+			e = e.targetTouches[0];
+		if(_this.mousedown)
+			_this.mousedown(e,scaledPos(e));
+	}
+
+	var mouseup = function(e)
+	{
+		if(e.targetTouches)
+			e = e.targetTouches[0];
+		if(_this.mouseup)
+			_this.mouseup(e,scaledPos(e));
+	}
+
+	var mousemove = function(e)
+	{
+		if(e.targetTouches)
+			e = e.targetTouches[0];
+		if(_this.mouseover)
+			_this.mouseover(e,scaledPos(e));
+		if(_this.mousemoveout)
+			_this.mousemoveout(e,scaledPos(e));
+		if(_this.mousemove)
+			_this.mousemove(e,scaledPos(e));
+	}
+
+	if(dom)
+	{
+		if(ANEngine.Platform=="desktop")
+		{
+			dom.addEventListener("mousedown",mousedown);
+			dom.addEventListener("mouseup",mouseup);
+			dom.addEventListener("mousemove",mousemove);
+			dom.addEventListener("click",click);
+		}
+		else if(ANEngine.Platform=="mobile")
+		{
+			dom.addEventListener("touchstart",mousedown);
+			dom.addEventListener("touchend",mouseup);
+			dom.addEventListener("touchcancel",mouseup);
+			dom.addEventListener("touchmove",mousemove);
+		}
+		else
+		{
+			dom.addEventListener("mousedown",mousedown);
+			dom.addEventListener("mouseup",mouseup);
+			dom.addEventListener("mousemove",mousemove);
+			dom.addEventListener("click",click);
+
+			dom.addEventListener("touchstart",mousedown);
+			dom.addEventListener("touchend",mouseup);
+			dom.addEventListener("touchcancel",mouseup);
+			dom.addEventListener("touchmove",mousemove);
+		}		
+	}
+
+	var scaledPos = function(e)
+	{
+		if(!e)return {x:0,y:0};
+		var scrollPos = getScrollTopLeft();
+		var mx=e.clientX,my=e.clientY;
+		mx = (mx + scrollPos.Left)/ANEngine.drawScale;
+		my = (my + scrollPos.Top)/ANEngine.drawScale;
+
+		return {x:mx,y:my};
+	}
+
+	//检测点是否在对象内,并派发事件,区域为矩形 reverse:点在对象外时派发事件
+	this.objIn = function(obj,pos,eventname,reverse)
+	{
+		if(!obj.dispatchEvent)
+			throw "Object must extend from EventDispatcher";
+		else
+		{
+			var mx=pos.x,my=pos.y;
+			var x1=obj.x,y1=obj.y;
+			var x2=obj.x+obj.width(),y2=obj.y+obj.height();
+			if(mx>=x1&&my>=y1&&mx<=x2&&my<=y2)
+			{
+				if(!reverse)
+				{
+					var event = new ANEngine.Event.Event(eventname,obj);
+					event.x = mx;
+					event.y = my;
+					obj.dispatchEvent(event);
+					return true;
+				}
+			}
+			else if(reverse)
+			{
+				var event = new ANEngine.Event.Event(eventname,obj);
+				event.x = mx;
+				event.y = my;
+				obj.dispatchEvent(event);
+				return true;
+			}
+			return false;
+		}
+	}
 }
 
 //可视元素基类
 ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 {
+	ANEngine.Event.EventDispatcher.call(this,this);
+
 	this.x = _x;
 	this.y = _y;
 	this.pivotX = _width/2;//旋转轴心

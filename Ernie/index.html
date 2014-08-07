@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<head>
+	<title>Ernie</title>
+	<script type="text/javascript" src="../ANEngine/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="../ANEngine/hammer.min.js"></script>
+	<script type="text/javascript" src="../ANEngine/Box2dWeb-2.1.a.3.js"></script>
+	<script type="text/javascript" src="../ANEngine/ANEngine.js"></script>
+	<script type="text/javascript" src="../ANEngine/ANEngine.Util.js"></script>
+</head>
+<body>
+	<script>
+		window.onload = function()
+		{
+			ANEngine.Platform = "mobile";
+			var scene = new ANEngine.Scene(document.getElementById("canvas"));
+			var layer = new ANEngine.Layer();
+			scene.addLayer(layer);
+			var button = new ANEngine.Sprite(5,5,5,1);
+			ANEngine.Util.Window.FullScreen(scene);
+			var loadMonitor = new ANEngine.Util.LoadMonitor();
+			loadMonitor.addImgSource("../assets/wood.png",function(img){
+				button.setChartlet(img);
+				button.addEvent("mouseup",function(e){
+					e.target.setChartlet(img);
+				});
+				layer.addAnimItem(button);
+			});
+
+			loadMonitor.addImgSource("../assets/glass.png",function(img){
+				button.addEvent("mousedown",function(e){
+					e.target.setChartlet(img);
+				});
+			});
+
+			setInterval(function(){
+				ANEngine.render(scene);
+			},1000/ANEngine.fps);
+		}
+	</script>
+	<canvas id="canvas" style="position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
+</body>

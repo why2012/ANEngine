@@ -56,7 +56,8 @@ ANEngine.Util.LoadMonitor = function()
         var _sources = sources;
         img.onload = function()
         {
-            callback(img);
+            if(callback)
+                callback(img);
             sources[src].loaded = true;
             if(_this.onprogress)
             {
