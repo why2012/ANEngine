@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <head>
 	<title>Ernie</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no" />
 	<script type="text/javascript" src="../ANEngine/jquery-2.0.2.min.js"></script>
 	<script type="text/javascript" src="../ANEngine/hammer.min.js"></script>
 	<script type="text/javascript" src="../ANEngine/Box2dWeb-2.1.a.3.js"></script>
@@ -15,9 +19,10 @@
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
-			var button = new ANEngine.Sprite(5,5,5,1);button.pivotX=0;button.pivotY=0;button.drawBorder = true;
+			var button = new ANEngine.Sprite(0,5,2,.2);button.pivotX=0;button.pivotY=0;
 			button.rotate = 1;
 			ANEngine.Util.Window.FullScreen(scene);
+			var animation = new ANEngine.Animation.Animation(button);
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
 			loadMonitor.addImgSource("../assets/wood.png");
 			loadMonitor.addImgSource("../assets/glass.png");
@@ -26,14 +31,22 @@
 				button.setChartlet(sources["../assets/wood.png"].item);
 				button.addEvent("mouseup",function(e){
 					e.target.setChartlet(sources["../assets/wood.png"].item);
+					button.x=button.rotate=1;
+					animation.animate({x:10},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseIn).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut);
 				});
 				button.addEvent("mousedown",function(e){
 					e.target.setChartlet(sources["../assets/glass.png"].item);
 				});
+				var btn = button.Clone();
+				btn.addEvent("mouseup",function(e){
+					e.target.setChartlet(sources["../assets/wood.png"].item);
+				});
+				btn.addEvent("mousedown",function(e){
+					e.target.setChartlet(sources["../assets/glass.png"].item);
+				});
+				layer.addAnimItem(btn);
 				layer.addAnimItem(button);
 			}
-			var animation = new ANEngine.Animation.Animation(button);
-			animation.animate({x:20},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseIn).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut);
 			setInterval(function(){
 				animation.update();
 				ANEngine.render(scene);
