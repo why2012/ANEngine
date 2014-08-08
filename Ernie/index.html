@@ -39,6 +39,8 @@
 				var btn = button.Clone();
 				btn.scaleW = 5;
 				btn.scaleH = 5;
+				btn.pivotX = btn.width/2;
+				btn.pivotY = btn.height/2;
 				btn.x = 5;
 				btn.animation.animate({scaleW:1,scaleH:1},500,ANEngine.Animation.TweenMode.Circ,ANEngine.Animation.EasingMode.EaseIn)
 				btn.addEvent("mouseup",function(e){
