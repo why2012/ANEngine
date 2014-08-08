@@ -19,10 +19,9 @@
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
-			var button = new ANEngine.Sprite(0,5,2,.2);button.pivotX=0;button.pivotY=0;
+			var button = new ANEngine.Sprite(0,5,2,.4);button.pivotX=0;button.pivotY=0;
 			button.rotate = 1;
 			ANEngine.Util.Window.FullScreen(scene);
-			var animation = new ANEngine.Animation.Animation(button);
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
 			loadMonitor.addImgSource("../assets/wood.png");
 			loadMonitor.addImgSource("../assets/glass.png");
@@ -32,12 +31,16 @@
 				button.addEvent("mouseup",function(e){
 					e.target.setChartlet(sources["../assets/wood.png"].item);
 					button.x=button.rotate=1;
-					animation.animate({x:10},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseIn).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut);
+					button.animation.animate({x:10},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseInOut,function(){console.log("Animation1 end");}).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut,function(){console.log("Animation2 end");});
 				});
 				button.addEvent("mousedown",function(e){
 					e.target.setChartlet(sources["../assets/glass.png"].item);
 				});
 				var btn = button.Clone();
+				btn.scaleW = 5;
+				btn.scaleH = 5;
+				btn.x = 5;
+				btn.animation.animate({scaleW:1,scaleH:1},500,ANEngine.Animation.TweenMode.Circ,ANEngine.Animation.EasingMode.EaseIn)
 				btn.addEvent("mouseup",function(e){
 					e.target.setChartlet(sources["../assets/wood.png"].item);
 				});
@@ -48,7 +51,6 @@
 				layer.addAnimItem(button);
 			}
 			setInterval(function(){
-				animation.update();
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}

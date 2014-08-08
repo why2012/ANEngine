@@ -734,8 +734,8 @@ ANEngine.Animation.Animation = function(_obj)
 			{
 				ini_styles[style] = target[style];
 				target_styles[style] = curAnim.styles[style] - target[style];
-				if(Math.ceil(curAnim.styles[style])>decision)
-					decision = curAnim.styles[style]*10;
+				if(Math.ceil(Math.abs(target_styles[style]))>decision)
+					decision = Math.abs(target_styles[style])*10;
 			}
 			decision = decision>200?200:decision;
 			var t = 0,step = curTotalTime/decision;
@@ -743,6 +743,7 @@ ANEngine.Animation.Animation = function(_obj)
 				for(var style in curAnim.styles)
 				{
 					target[style] = curFunc(t,ini_styles[style],target_styles[style],decision);
+					//console.log(style+","+target[style]+",t:"+t);
 				}
 				if(t<decision)
 				{
@@ -781,7 +782,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	this.func = null;
 	this.layer = null;
 	this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
-
+	this.animation = new ANEngine.Animation.Animation(this);
 
 	this.canvasDraw = function(canvas,vertices)
 	{
@@ -869,6 +870,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 
 	this.preDraw = function(canvas)
 	{
+		this.animation.update();
 		var drawScale = ANEngine.drawScale;
 		//计算像素单位
 		var _x=this.x*drawScale,_y=this.y*drawScale,_pivotX=this.pivotX*drawScale,
