@@ -26,6 +26,8 @@ ANEngine.physicalEngine.ComplexShape = {};
 ANEngine.Event = {};
 //控件
 ANEngine.Widget = {};
+//动画插件
+ANEngine.Animation = {};
 
 //每帧渲染
 ANEngine.render = function(scene)
@@ -191,7 +193,10 @@ ANEngine.Layer = function()
 		for(var a in animItemPool)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
+			{
+				animItemPool[a].mouse_down = true;	
 				return true;
+			}
 		}
 
 		return false;
@@ -202,10 +207,12 @@ ANEngine.Layer = function()
 		for(var a in animItemPool)
 		{
 			//mouseup事件与鼠标位置无关
-			pos.x = animItemPool[a].x+animItemPool[a].width()/2;
-			pos.y = animItemPool[a].y+animItemPool[a].height()/2;
-			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
+			if(animItemPool[a].mouse_down&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
+			{
+				animItemPool[a].mouse_down = false;
 				return true;
+			}
+			animItemPool[a].mouse_down = false;
 		}
 
 		return false;
@@ -353,7 +360,7 @@ ANEngine.Event.Event = function(_name,_target)
 	this.target = _target;
 }
 
-//click mousedown mouseup mouseover mousemoveout
+//click mousedown mouseup mouseover mousemoveout mousemove
 //移动平台click事件用mouseup事件代替
 ANEngine.Event.MouseEventDetector = function(dom)
 {
@@ -402,10 +409,11 @@ ANEngine.Event.MouseEventDetector = function(dom)
 
 	var mouseup = function(e)
 	{
+		var _xy=e;
 		if(e.targetTouches)
-			e = e.targetTouches[0];
+			_xy = e.targetTouches[0];
 		if(_this.mouseup)
-			_this.mouseup(e,scaledPos(e));
+			_this.mouseup(e,scaledPos(_xy));
 	}
 
 	var mousemove = function(e)
@@ -452,7 +460,7 @@ ANEngine.Event.MouseEventDetector = function(dom)
 
 	var scaledPos = function(e)
 	{
-		if(!e)return {x:0,y:0};
+		if(!e)return {x:NaN,y:NaN};
 		var scrollPos = getScrollTopLeft();
 		var mx=e.clientX,my=e.clientY;
 		mx = (mx + scrollPos.Left)/ANEngine.drawScale;
@@ -464,19 +472,23 @@ ANEngine.Event.MouseEventDetector = function(dom)
 	//检测点是否在对象内,并派发事件,区域为矩形 reverse:点在对象外时派发事件
 	this.objIn = function(obj,pos,eventname,reverse)
 	{
-		if(!obj.dispatchEvent)
-			throw "Object must extend from EventDispatcher";
+		if(!obj.dispatchEvent){
+			throw "Object must extend from EventDispatcher:"+eventname;}
 		else
 		{
-			var width = obj.width(),height = obj.height();
-			var pivotX = width/2+obj.x;
-			var pivotY = height/2+obj.y;
-			var mx=pos.x-pivotX,my=pivotY-pos.y;
-			var xcos=mx*Math.cos(obj.rotate),xsin=mx*Math.sin(obj.rotate),ycos=my*Math.cos(obj.rotate),ysin=my*Math.sin(obj.rotate);
-			mx=xcos-ysin;my=xsin+ycos;
-			var x1=-width/2,y1=height/2;
-			var x2=width/2,y2=-height/2;
-			if(mx>=x1&&my>=y2&&mx<=x2&&my<=y1)
+			var out = false;
+			if(isNaN(pos.x)||isNaN(pos.y)||eventname=="mouseup")
+				out = true;
+			if(!out)
+			{
+				var width = obj.width,height = obj.height;
+				var mx=pos.x-obj.pivotX-obj.x,my=pos.y-obj.pivotY-obj.y;
+				var xcos=mx*Math.cos(-obj.rotate),xsin=mx*Math.sin(-obj.rotate),ycos=my*Math.cos(-obj.rotate),ysin=my*Math.sin(-obj.rotate);
+				mx=xcos-ysin;my=xsin+ycos;
+				var x1=-obj.pivotX,y1=-obj.pivotY;
+				var x2=width-obj.pivotX,y2=height-obj.pivotY;//if(eventname=="mousedown")console.log(mx+","+my+"----"+x1+","+y1+";"+x2+","+y2);
+			}
+			if(!out&&mx>=x1&&my>=y1&&mx<=x2&&my<=y2)
 			{
 				if(!reverse)
 				{
@@ -487,16 +499,44 @@ ANEngine.Event.MouseEventDetector = function(dom)
 					return true;
 				}
 			}
+			else if(eventname=="mouseup")
+			{
+				var event = new ANEngine.Event.Event(eventname,obj);
+				event.x = pos.x;
+				event.y = pos.y;
+				obj.dispatchEvent(event);
+				return true;
+			}
 			else if(reverse)
 			{
 				var event = new ANEngine.Event.Event(eventname,obj);
-				event.x = mx;
-				event.y = my;
+				event.x = pos.x;
+				event.y = pos.y;
 				obj.dispatchEvent(event);
 				return true;
 			}
 			return false;
 		}
+	}
+}
+
+//动画缓冲
+ANEngine.Animation.EasingMode = {EaseIn:"EaseIn",EaseOut:"EaseOut",EaseInOut:"EaseInOut"};
+
+//动画插件
+ANEngine.Animation.Animation = function(_obj)
+{
+	this.target = _obj;
+	var animations = new Array();
+
+	this.animate = function(styles,speed,easing,callback)
+	{
+		animations.push({styles:styles,speed:speed,easing:easing,callback:callback});
+	}
+
+	this.update = function()
+	{
+
 	}
 }
 
@@ -509,8 +549,8 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	this.y = _y;
 	this.pivotX = _width/2;//旋转轴心
 	this.pivotY = _height/2;
-	var width = _width;
-	var height = _height;
+	this.width = _width;
+	this.height = _height;
 	this.rotate = _rotate==undefined?0:_rotate;//旋转弧度
 	this.alpha = 1;
 	this.blend = "source_over";
@@ -520,21 +560,6 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 	this.layer = null;
 	this.drawBorder = false;//是否画边框，物理边框为红色，sprite边框为蓝色
 
-	this.width = function(_width)
-	{
-		width = _width||width;
-		width = width==undefined?0:width;
-		pivotX = width/2;
-		return width;
-	}
-
-	this.height = function(_height)
-	{
-		height = _height||height;
-		height = height==undefined?0:height;
-		pivotY = height/2;
-		return height;
-	}
 
 	this.canvasDraw = function(canvas,vertices)
 	{
@@ -567,7 +592,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		canvas.save();
 		var drawScale = ANEngine.drawScale;
 		var x=this.x*drawScale,y=this.y*drawScale,pivotX=this.pivotX*drawScale,
-		pivotY=this.pivotY*drawScale,width=this.width*drawScale,height=this.height*drawScale;
+		pivotY=this.pivotY*drawScale;//,width=this.width*drawScale,height=this.height*drawScale;
 		var translateX = x+pivotX,translateY = y+pivotY;
 		//应用位移和旋转
 		canvas.translate(translateX,translateY);
@@ -611,9 +636,9 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		var drawScale = ANEngine.drawScale;
 		canvas.beginPath();
 		canvas.moveTo(sprite.x*drawScale,sprite.y*drawScale);
-		canvas.lineTo(sprite.width()*drawScale+sprite.x*drawScale,sprite.y*drawScale);
-		canvas.lineTo(sprite.width()*drawScale+sprite.x*drawScale,sprite.height()*drawScale+sprite.y*drawScale);
-		canvas.lineTo(sprite.x*drawScale,sprite.height()*drawScale+sprite.y*drawScale);
+		canvas.lineTo(sprite.width*drawScale+sprite.x*drawScale,sprite.y*drawScale);
+		canvas.lineTo(sprite.width*drawScale+sprite.x*drawScale,sprite.height*drawScale+sprite.y*drawScale);
+		canvas.lineTo(sprite.x*drawScale,sprite.height*drawScale+sprite.y*drawScale);
 		canvas.lineTo(sprite.x*drawScale,sprite.y*drawScale);
 		canvas.closePath();
 		canvas.stroke();
@@ -625,7 +650,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		var drawScale = ANEngine.drawScale;
 		//计算像素单位
 		var _x=this.x*drawScale,_y=this.y*drawScale,_pivotX=this.pivotX*drawScale,
-		_pivotY=this.pivotY*drawScale,_width=width*drawScale,_height=height*drawScale;
+		_pivotY=this.pivotY*drawScale,_width=this.width*drawScale,_height=this.height*drawScale;
 		var translateX = _x+_pivotX,translateY = _y+_pivotY;
 		//应用位移和旋转
 		canvas.translate(translateX,translateY);
@@ -685,8 +710,8 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 		var phyAttr = this.physicalSkin.getPhyAttr();
 		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 		{
-			this.x = phyAttr.body.GetPosition().x-this.width()/2;
-			this.y = phyAttr.body.GetPosition().y-this.height()/2;
+			this.x = phyAttr.body.GetPosition().x-this.width/2;
+			this.y = phyAttr.body.GetPosition().y-this.height/2;
 			this.rotate = phyAttr.body.GetAngle();
 		}
 		canvas.save();
@@ -697,14 +722,14 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 				canvas.drawImage(image,imageCut.sx,imageCut.sy,imageCut.swidth,imageCut.sheight,
 					this.x*ANEngine.drawScale,
 					this.y*ANEngine.drawScale,
-					this.width()*ANEngine.drawScale,
-					this.height()*ANEngine.drawScale);
+					this.width*ANEngine.drawScale,
+					this.height*ANEngine.drawScale);
 			else
 				canvas.drawImage(image,
 					this.x*ANEngine.drawScale,
 					this.y*ANEngine.drawScale,
-					this.width()*ANEngine.drawScale,
-					this.height()*ANEngine.drawScale);
+					this.width*ANEngine.drawScale,
+					this.height*ANEngine.drawScale);
 		}
 		canvas.restore();
 	}
@@ -786,8 +811,8 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		var phyAttr = this.physicalSkin.getPhyAttr();
 		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
 		{
-			this.x = phyAttr.body.GetPosition().x-this.width()/2;
-			this.y = phyAttr.body.GetPosition().y-this.height()/2;
+			this.x = phyAttr.body.GetPosition().x-this.width/2;
+			this.y = phyAttr.body.GetPosition().y-this.height/2;
 			this.rotate = phyAttr.body.GetAngle();
 		}
 		canvas.save();
@@ -800,8 +825,8 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w,frame.frame.h,
 					this.x*ANEngine.drawScale,
 					this.y*ANEngine.drawScale,
-					this.width()*ANEngine.drawScale,
-					this.height()*ANEngine.drawScale);
+					this.width*ANEngine.drawScale,
+					this.height*ANEngine.drawScale);
 			if(!fps||interval>=1000/fps)
 			{
 				lastFrameTime = curTime;
@@ -1213,7 +1238,7 @@ ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
 			var friction = phyData.friction;
 			var restitution = phyData.restitution;
 			var angle = _this.rotate;
-			var x = _this.x,y = _this.y,width = _this.width(),height = _this.height();
+			var x = _this.x,y = _this.y,width = _this.width,height = _this.height;
 			//console.log(x+","+y+","+width+","+height+","+angle);
 			phyAttr.shape = shape||phyAttr.shape;
 			phyAttr.type = type||phyAttr.type;

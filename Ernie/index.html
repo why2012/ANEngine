@@ -11,26 +11,27 @@
 	<script>
 		window.onload = function()
 		{
-			ANEngine.Platform = "mobile";
+			ANEngine.Platform = "desktop";
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
-			var button = new ANEngine.Sprite(5,5,5,1);button.rotate = 5;button.drawBorder = true;
+			var button = new ANEngine.Sprite(5,5,5,1);button.pivotX=0;button.pivotY=0;button.drawBorder = true;
+			button.rotate = 1;
 			ANEngine.Util.Window.FullScreen(scene);
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
-			loadMonitor.addImgSource("../assets/wood.png",function(img){
-				button.setChartlet(img);
+			loadMonitor.addImgSource("../assets/wood.png");
+			loadMonitor.addImgSource("../assets/glass.png");
+			loadMonitor.onload = function(l,sources)
+			{
+				button.setChartlet(sources["../assets/wood.png"].item);
 				button.addEvent("mouseup",function(e){
-					e.target.setChartlet(img);
+					e.target.setChartlet(sources["../assets/wood.png"].item);
+				});
+				button.addEvent("mousedown",function(e){
+					e.target.setChartlet(sources["../assets/glass.png"].item);
 				});
 				layer.addAnimItem(button);
-			});
-
-			loadMonitor.addImgSource("../assets/glass.png",function(img){
-				button.addEvent("mousedown",function(e){
-					e.target.setChartlet(img);
-				});
-			});
+			}
 
 			setInterval(function(){
 				ANEngine.render(scene);

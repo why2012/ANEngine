@@ -59,17 +59,17 @@ ANEngine.Util.LoadMonitor = function()
             if(callback)
                 callback(img);
             sources[src].loaded = true;
+            var sourcesLen = 0;
+            for(var i in _sources)
+                sourcesLen++;
+            var loadedNum = _this.getLoadedSrcNum();
             if(_this.onprogress)
             {
-                var sourcesLen = 0;
-                for(var i in _sources)
-                    sourcesLen++;
-                var loadedNum = _this.getLoadedSrcNum();
-                _this.onprogress(loadedNum,sourcesLen);
-                if(loadedNum==sourcesLen&&_this.onload)
-                {
-                    _this.onload(sourcesLen,_sources);
-                }
+                _this.onprogress(loadedNum,sourcesLen);        
+            }
+            if(loadedNum==sourcesLen&&_this.onload)
+            {
+                _this.onload(sourcesLen,_sources);
             }
         }
         sources[src] = {item:img,src:src,loaded:false};
@@ -81,20 +81,21 @@ ANEngine.Util.LoadMonitor = function()
         var _sources = sources;
         $.getJSON(src,function(json)
         {
-            callback(json);
+            if(callback)
+                callback(json);
             sources[src].item = json;
             sources[src].loaded = true;
+            var sourcesLen = 0;
+            for(var i in _sources)
+                sourcesLen++;
+            var loadedNum = _this.getLoadedSrcNum();
             if(_this.onprogress)
             {
-                var sourcesLen = 0;
-                for(var i in _sources)
-                    sourcesLen++;
-                var loadedNum = _this.getLoadedSrcNum();
-                _this.onprogress(loadedNum,sourcesLen);
-                if(loadedNum==sourcesLen&&_this.onload)
-                {
-                    _this.onload(sourcesLen,_sources);
-                }
+                _this.onprogress(loadedNum,sourcesLen);   
+            }
+            if(loadedNum==sourcesLen&&_this.onload)
+            {
+                _this.onload(sourcesLen,_sources);
             }
         });
         sources[src] = {item:null,src:src,loaded:false};
@@ -106,20 +107,21 @@ ANEngine.Util.LoadMonitor = function()
         var _sources = sources;
         $.get(src,params,function(s)
         {
-            callback(s);
+            if(callback)
+                callback(s);
             sources[src].item = s;
             sources[src].loaded = true;
+            var sourcesLen = 0;
+            for(var i in _sources)
+                sourcesLen++;
+            var loadedNum = _this.getLoadedSrcNum();
             if(_this.onprogress)
             {
-                var sourcesLen = 0;
-                for(var i in _sources)
-                    sourcesLen++;
-                var loadedNum = _this.getLoadedSrcNum();
-                _this.onprogress(loadedNum,sourcesLen);
-                if(loadedNum==sourcesLen&&_this.onload)
-                {
-                    _this.onload(sourcesLen,_sources);
-                }
+                _this.onprogress(loadedNum,sourcesLen);   
+            }
+            if(loadedNum==sourcesLen&&_this.onload)
+            {
+                _this.onload(sourcesLen,_sources);
             }
         },type);
         sources[src] = {item:null,src:src,loaded:false};
