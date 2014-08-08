@@ -520,23 +520,245 @@ ANEngine.Event.MouseEventDetector = function(dom)
 	}
 }
 
-//动画缓冲
-ANEngine.Animation.EasingMode = {EaseIn:"EaseIn",EaseOut:"EaseOut",EaseInOut:"EaseInOut"};
+//动画缓动类型
+ANEngine.Animation.TweenMode = {Linear:"Linear",Quad:"Quad",Cubic:"Cubic",Quart:"Quart",Quint:"Quint",
+Sine:"Sine",Expo:"Expo",Circ:"Circ",Elastic:"Elastic",Back:"Back",Bounce:"Bounce"};
+ANEngine.Animation.EasingMode = {EaseIn:"easeIn",EaseOut:"easeOut",EaseInOut:"easeInOut"};
+/*
+t: current time（当前时间）；
+b: beginning value（初始值）；
+c: change in value（变化量）；
+d: duration（持续时间）
+box(x:10)--->box(x:60) in 5 times
+t=0,b=10,c=50,d=5
+*/
+//缓动函数
+ANEngine.Animation.Tween = {
+    Linear: function(t,b,c,d){ return c*t/d + b; },
+    Quad: {
+        easeIn: function(t,b,c,d){
+            return c*(t/=d)*t + b;
+        },
+        easeOut: function(t,b,c,d){
+            return -c *(t/=d)*(t-2) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if ((t/=d/2) < 1) return c/2*t*t + b;
+            return -c/2 * ((--t)*(t-2) - 1) + b;
+        }
+    },
+    Cubic: {
+        easeIn: function(t,b,c,d){
+            return c*(t/=d)*t*t + b;
+        },
+        easeOut: function(t,b,c,d){
+            return c*((t=t/d-1)*t*t + 1) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if ((t/=d/2) < 1) return c/2*t*t*t + b;
+            return c/2*((t-=2)*t*t + 2) + b;
+        }
+    },
+    Quart: {
+        easeIn: function(t,b,c,d){
+            return c*(t/=d)*t*t*t + b;
+        },
+        easeOut: function(t,b,c,d){
+            return -c * ((t=t/d-1)*t*t*t - 1) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+            return -c/2 * ((t-=2)*t*t*t - 2) + b;
+        }
+    },
+    Quint: {
+        easeIn: function(t,b,c,d){
+            return c*(t/=d)*t*t*t*t + b;
+        },
+        easeOut: function(t,b,c,d){
+            return c*((t=t/d-1)*t*t*t*t + 1) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+            return c/2*((t-=2)*t*t*t*t + 2) + b;
+        }
+    },
+    Sine: {
+        easeIn: function(t,b,c,d){
+            return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+        },
+        easeOut: function(t,b,c,d){
+            return c * Math.sin(t/d * (Math.PI/2)) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+        }
+    },
+    Expo: {
+        easeIn: function(t,b,c,d){
+            return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+        },
+        easeOut: function(t,b,c,d){
+            return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if (t==0) return b;
+            if (t==d) return b+c;
+            if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+            return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+        }
+    },
+    Circ: {
+        easeIn: function(t,b,c,d){
+            return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+        },
+        easeOut: function(t,b,c,d){
+            return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+        },
+        easeInOut: function(t,b,c,d){
+            if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+            return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+        }
+    },
+    Elastic: {
+        easeIn: function(t,b,c,d,a,p){
+            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+            else var s = p/(2*Math.PI) * Math.asin (c/a);
+            return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+        },
+        easeOut: function(t,b,c,d,a,p){
+            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+            else var s = p/(2*Math.PI) * Math.asin (c/a);
+            return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
+        },
+        easeInOut: function(t,b,c,d,a,p){
+            if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+            else var s = p/(2*Math.PI) * Math.asin (c/a);
+            if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+            return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+        }
+    },
+    Back: {
+        easeIn: function(t,b,c,d,s){
+            if (s == undefined) s = 1.70158;
+            return c*(t/=d)*t*((s+1)*t - s) + b;
+        },
+        easeOut: function(t,b,c,d,s){
+            if (s == undefined) s = 1.70158;
+            return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+        },
+        easeInOut: function(t,b,c,d,s){
+            if (s == undefined) s = 1.70158; 
+            if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+            return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+        }
+    },
+    Bounce: {
+        easeIn: function(t,b,c,d){
+            return c - ANEngine.Animation.Tween.Bounce.easeOut(d-t, 0, c, d) + b;
+        },
+        easeOut: function(t,b,c,d){
+            if ((t/=d) < (1/2.75)) {
+                return c*(7.5625*t*t) + b;
+            } else if (t < (2/2.75)) {
+                return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+            } else if (t < (2.5/2.75)) {
+                return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+            } else {
+                return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+            }
+        },
+        easeInOut: function(t,b,c,d){
+            if (t < d/2) return ANEngine.Animation.Tween.Bounce.easeIn(t*2, 0, c, d) * .5 + b;
+            else return ANEngine.Animation.Tween.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;
+        }
+    }
+}
+
 
 //动画插件
+//speed: slow normal fast or millisec
 ANEngine.Animation.Animation = function(_obj)
 {
 	this.target = _obj;
 	var animations = new Array();
+	var curAnim = null,curTotalTime = null,curFunc = null,curCallback = null,curInterval = null;
 
-	this.animate = function(styles,speed,easing,callback)
+	this.animate = function(styles,speed,tween,easing,callback)
 	{
-		animations.push({styles:styles,speed:speed,easing:easing,callback:callback});
+		animations.push({styles:styles,speed:speed,tween:tween,easing:easing,callback:callback});
+		return this;
 	}
 
+	//interval和timeout每秒200次计算封顶。。。
 	this.update = function()
 	{
+		//确定每轮缓动的基本参数
+		if(curAnim==null&&animations.length>0)
+		{
+			curAnim = animations.shift();
+			//确定速度
+			if(curAnim.speed=="slow")
+				curTotalTime = 3000;
+			else if(curAnim.speed=="normal")
+				curTotalTime = 1500;
+			else if(curAnim.speed=="fast")
+				curTotalTime = 500;
+			else if(!isNaN(curAnim.speed))
+				curTotalTime = curAnim.speed;
+			else
+			{
+				throw "Unkown speed";
+				return;
+			}
+			//确定缓动函数
+			if(curAnim.tween=="Linear")
+				curFunc = ANEngine.Animation.Tween["Linear"];
+			else
+				curFunc = ANEngine.Animation.Tween[curAnim.tween][curAnim.easing];
 
+			if(!curFunc)
+			{
+				throw "Wrong tween type or easing type";
+				return;
+			}
+			curCallback = curAnim.callback;
+			var target = this.target;
+			var decision = 1;//计算次数，取style最大值
+			var ini_styles = {};
+			var target_styles = {};
+			for(var style in curAnim.styles)
+			{
+				ini_styles[style] = target[style];
+				target_styles[style] = curAnim.styles[style] - target[style];
+				if(Math.ceil(curAnim.styles[style])>decision)
+					decision = curAnim.styles[style]*10;
+			}
+			decision = decision>200?200:decision;
+			var t = 0,step = curTotalTime/decision;
+			var Run = function(){
+				for(var style in curAnim.styles)
+				{
+					target[style] = curFunc(t,ini_styles[style],target_styles[style],decision);
+				}
+				if(t<decision)
+				{
+					t++;
+					setTimeout(Run,step);
+				}
+				else
+				{
+					if(curCallback)
+						curCallback();
+					curCallback = null;
+					curAnim = null;
+				}
+			};
+			Run();
+		}
 	}
 }
 

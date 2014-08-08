@@ -11,7 +11,7 @@
 	<script>
 		window.onload = function()
 		{
-			ANEngine.Platform = "desktop";
+			ANEngine.Platform = "both";
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
@@ -32,8 +32,10 @@
 				});
 				layer.addAnimItem(button);
 			}
-
+			var animation = new ANEngine.Animation.Animation(button);
+			animation.animate({x:20},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseIn).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut);
 			setInterval(function(){
+				animation.update();
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}
