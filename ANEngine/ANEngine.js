@@ -901,7 +901,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 
 	this.DisplayObject_Clone = function()
 	{
-		var co = new this.constructor(_x,_y,_width,_height,_rotate);
+		var co = new this.constructor(this.x,this.y,this.width,this.height,this.rotate);
 		co.pivotX = this.pivotX;
 		co.pivotY = this.pivotY;
 		co.alpha = this.alpha;
@@ -1092,17 +1092,25 @@ textBaseline:
 	ideographic	文本基线是表意基线。
 	bottom	文本基线是 em 方框的底端。
 */
-ANEngine.Text = function(text,_x,_y,_width,_height,_rotate)
+ANEngine.Widget.TextStyle = function(font,textAlign,textBaseline,fillStyle,strokeStyle)
+{
+	this.font = font;
+	this.textAlign = textAlign;
+	this.textBaseline = textBaseline;
+	this.fillStyle = fillStyle;
+	this.strokeStyle = strokeStyle;
+
+	this.Clone = function()
+	{
+		var style = new ANEngine.Widget.TextStyle(this.font,this.textAlign,this.textBaseline,this.fillStyle,this.strokeStyle);
+	}
+}
+ANEngine.Widget.Text = function(text,_x,_y,_width,_height,_rotate)
 {
 	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
-
 	this.text = text;
-	this.font = "";
-	this.textAlign = "";
-	this.textBaseline = "";
 	this.drawstyle = 1;//1：填充，2：镂空，3：填充和镂空
-	this.fillStyle = "";
-	this.strokeStyle = ""; 
+	this.textStyle = null;
 	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
 
 	this.draw = function(canvas)
@@ -1116,16 +1124,19 @@ ANEngine.Text = function(text,_x,_y,_width,_height,_rotate)
 		}
 		canvas.save();
 		this.preDraw(canvas);//调用基类的预处理
-		if(this.font)
-			canvas.font = this.font
-		if(this.textAlign)
-			canvas.textAlign = this.textAlign;
-		if(this.textBaseline)
-			canvas.textBaseline = this.textBaseline;
-		if(this.drawstyle==1||this.drawstyle==3)
-			canvas.fillStyle = this.fillStyle;
-		if(this.drawstyle==2||this.drawstyle==3)
-			canvas.strokeStyle = this.strokeStyle;
+		if(this.textStyle)
+		{
+			if(this.textStyle.font)
+				canvas.font = this.textStyle.font
+			if(this.textStyle.textAlign)
+				canvas.textAlign = this.textStyle.textAlign;
+			if(this.textStyle.textBaseline)
+				canvas.textBaseline = this.textStyle.textBaseline;
+			if(this.drawstyle==1||this.drawstyle==3)
+				canvas.fillStyle = this.textStyle.fillStyle;
+			if(this.drawstyle==2||this.drawstyle==3)
+				canvas.strokeStyle = this.textStyle.strokeStyle;
+		}
 		this.width = canvas.measureText(this.text).width/ANEngine.drawScale;
 		if(this.drawstyle==2||this.drawstyle==3)
 			canvas.strokeText(this.text,this.x*ANEngine.drawScale,this.y*ANEngine.drawScale);
@@ -1138,13 +1149,7 @@ ANEngine.Text = function(text,_x,_y,_width,_height,_rotate)
 	{
 		var co = this.DisplayObject_Clone();
 		co.text=this.text;
-		co.font=this.font;
-		co.textAlign=this.textAlign;
-		co.textBaseline=this.textBaseline;
-		co.hollowed_out=this.hollowed_out;
-		co.filling=this.filling;
-		co.fillStyle=this.fillStyle;
-		co.strokeStyle=this.strokeStyle;
+		co.textStyle=this.textStyle;
 		return co;
 	}
 }
