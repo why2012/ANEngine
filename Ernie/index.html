@@ -14,87 +14,219 @@
 </head>
 <body>
 	<script>
-		window.onload = function()
-		{
-			ANEngine.Platform = "mobile";
-			var scene = new ANEngine.Scene(document.getElementById("canvas"));
-			var layer = new ANEngine.Layer();
-			scene.addLayer(layer);
-			var button = new ANEngine.Sprite(0,5,2,.4);button.pivotX=0;button.pivotY=0;
-			var mvc = new ANEngine.MovieClip(5,2,2,2);
-			var mvc_switch = 0,end_frame = 30,back_frame = 16;;
-			var text1 = new ANEngine.Widget.Text("游戏开始",7,2,0,1.1);
-			var textStyle = new ANEngine.Widget.TextStyle();
-			text1.textStyle = textStyle;
-			text1.drawBorder = true;
-			textStyle.strokeStyle = "green";
-			textStyle.fillStyle = "red";
-			textStyle.font = "30px Verdana";
-			text1.drawstyle = 1;
-			textStyle.textBaseline = "hanging";
-			text1.addEvent("mouseover",function(e){e.target.drawstyle=2;});
-			text1.addEvent("mousedown",function(e){e.target.drawstyle=3;});
-			text1.addEvent("mouseup",function(e){e.target.drawstyle=1;});
-			text1.addEvent("mousemoveout",function(e){e.target.drawstyle=1;});
-			mvc.gotoAndPlay(16);mvc.drawBorder = true;
-			mvc.monitor = function(f,m)
+		var Ernie = function()
 			{
-				if(f==end_frame)
-					m.gotoAndPlay(back_frame);
-			}
-			button.rotate = 1;
-			ANEngine.Util.Window.FullScreen(scene);
-			var loadMonitor = new ANEngine.Util.LoadMonitor();
-			loadMonitor.addImgSource("../assets/wood.png");
-			loadMonitor.addImgSource("../assets/glass.png");
-			loadMonitor.addImgSource("../assets/ta.png");
-			loadMonitor.addJsonSource("../assets/ta.json");
-			loadMonitor.onload = function(l,sources)
-			{
-				mvc.setSpriteSheet(sources["../assets/ta.png"].item,sources["../assets/ta.json"].item,24);
-				mvc.addEvent("mouseup",function(e){
-					if(!mvc_switch)
+				this.anim = new ANEngine.MovieClip(2,3,8,8);
+				var _default = 1;
+				var start = 2;
+				var end = 16;
+				var success = 17,success_end = 20;
+				var fail = 21,fail_end = 24;
+				this.cur_status = 0;//fail:0,success:1
+				this.anim.gotoAndStop(_default);
+				var _this = this;
+				this.callback = null;
+				this.busy = false;
+				this.anim.monitor = function(f,m)
+				{
+					if(_this.callback)
+						_this.callback(f,m);
+					if(!_this.busy)
 					{
-						e.target.gotoAndPlay(1);
-						mvc_switch = 1;
-						end_frame = 15;
-						back_frame = 1;
+						if(f==end)
+						{
+							if(_this.cur_status==0)
+								m.gotoAndPlay(fail);
+							else
+								m.gotoAndPlay(success);
+						}
+						if(f==success_end||f==fail_end)
+							m.stop();
 					}
 					else
 					{
-						mvc_switch = 0;
-						end_frame = 30;
-						back_frame = 16;
-						e.target.gotoAndPlay(16);
+						if(f==end)
+							m.gotoAndPlay(start);
 					}
-				});
-				button.setChartlet(sources["../assets/wood.png"].item);
-				button.addEvent("mouseup",function(e){
-					e.target.setChartlet(sources["../assets/wood.png"].item);
-					button.x=button.rotate=1;
-					button.animation.animate({x:10},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseInOut,function(){console.log("Animation1 end");}).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut,function(){console.log("Animation2 end");});
-				});
-				button.addEvent("mousedown",function(e){
-					e.target.setChartlet(sources["../assets/glass.png"].item);
-				});
-				var btn = button.Clone();
-				btn.scaleW = 5;
-				btn.scaleH = 5;
-				btn.pivotX = btn.width/2;
-				btn.pivotY = btn.height/2;
-				btn.x = 5;
-				btn.animation.animate({scaleW:1,scaleH:1},500,ANEngine.Animation.TweenMode.Circ,ANEngine.Animation.EasingMode.EaseIn)
-				btn.addEvent("mouseup",function(e){
-					e.target.setChartlet(sources["../assets/wood.png"].item);
-				});
-				btn.addEvent("mousedown",function(e){
-					e.target.setChartlet(sources["../assets/glass.png"].item);
-				});
-				layer.addAnimItem(mvc);
-				layer.addAnimItem(text1);
-				layer.addAnimItem(btn);
-				layer.addAnimItem(button);
+				}
+
+				this.setSrc = function(img,json)
+				{
+					this.anim.setSpriteSheet(img,json,24);
+				}
+
+				this.start = function()
+				{
+					this.anim.gotoAndPlay(start);
+				}
+
+				this.stop = function()
+				{
+					this.anim.gotoAndStop(_default);
+				}
+
+				this.get = function(name)
+				{
+
+					switch(name)
+					{
+						case "success_end":return success_end;break;
+						case "fail_end":return fail_end;break;
+						case "end":return end;break;
+						case "start":return start;break;
+					}
+				}
 			}
+
+		function getResult()
+		{
+			return	Math.floor(Math.random()*2);
+		}
+	</script>
+	<script>
+		window.onload = function()
+		{
+			//
+				var start = 0;
+				var zhushu = 0;
+				var max_time = 5;
+				var auto = false;//自动帮投
+			//
+			ANEngine.Platform = "mobile";//"desktop" "mobile"
+			var scene = new ANEngine.Scene(document.getElementById("canvas"));
+			ANEngine.Util.Window.FullScreen(scene);
+			var layer = new ANEngine.Layer();
+			scene.addLayer(layer);
+			var ernie = new Ernie();
+			//Text
+			var start_game = new ANEngine.Sprite(3.7,12,4,1.5);
+			var conti_game = new ANEngine.Sprite(3.7,12,4,1.5);
+			var conti_btn = new ANEngine.Sprite(3.7,12,4,1.5);
+			var help_btn = new ANEngine.Sprite(3.7,14,4,1.5);
+			layer.addAnimItem(start_game);
+			var zhushu_text= new ANEngine.Widget.Text("已投注：0",3.7,1,0,1.1);
+			layer.addAnimItem(zhushu_text);
+			var notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",3.7,2,0,1.1);
+			notice.alpha = 0;
+			layer.addAnimItem(notice);
+
+			var textStyle = new ANEngine.Widget.TextStyle();
+			textStyle.strokeStyle = "green";
+			textStyle.fillStyle = "blue";
+			textStyle.font = "20px Verdana";
+			textStyle.textBaseline = "hanging";
+			zhushu_text.textStyle = textStyle;
+			var notice_style = textStyle.Clone();
+			notice.textStyle = notice_style;
+
+			ernie.callback  =function(f,m)
+			{
+				if(auto)
+				{
+					//自动投注
+					/*if(f==ernie.get("end"))
+					{
+						
+					}*/
+					return;
+				}
+				if(f==ernie.get("success_end")||f==ernie.get("fail_end"))
+					start = 0;
+				if(f==ernie.get("fail_end"))
+					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn).delay(1000).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);
+			}
+
+			var loadMonitor = new ANEngine.Util.LoadMonitor();
+			loadMonitor.addImgSource("assets/ernie.png");
+			loadMonitor.addJsonSource("assets/ernie.json");
+			loadMonitor.addImgSource("assets/start_game_down.png");
+			loadMonitor.addImgSource("assets/start_game_up.png");
+			loadMonitor.addImgSource("assets/conti_game_up.png");
+			loadMonitor.addImgSource("assets/conti_game_down.png");
+			loadMonitor.addImgSource("assets/conti_btn_up.png");
+			loadMonitor.addImgSource("assets/conti_btn_down.png");
+			loadMonitor.addImgSource("assets/help_up.png");
+			loadMonitor.addImgSource("assets/help_down.png");
+			loadMonitor.addImgSource("assets/bg.png",function(img){
+				scene.setBG(img);
+			});
+
+			loadMonitor.onload = function(len,sources)
+			{
+				ernie.anim.drawBorder = true;
+				ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
+				layer.addAnimItem(ernie.anim);
+				//start_game
+				start_game.setChartlet(sources["assets/start_game_up.png"].item);
+				conti_game.setChartlet(sources["assets/conti_game_up.png"].item);
+				conti_btn.setChartlet(sources["assets/conti_btn_up.png"].item);
+				help_btn.setChartlet(sources["assets/help_up.png"].item);
+				var game_btn_down = sources["assets/start_game_down.png"].item;
+				var game_btn_up = sources["assets/start_game_up.png"].item;
+				var game_down_func = function(e){e.target.setChartlet(game_btn_down);};
+				var started = 0;
+				var game_up_func = function(e)
+				{
+					e.target.setChartlet(game_btn_up);
+					if(auto)return;
+					if(start==0)
+					{
+						//如果中奖弹出提示框，恢复游戏开始状态
+						ernie.cur_status = getResult();
+						zhushu++;
+						ernie.start();
+						zhushu_text.text = "已投注："+zhushu;
+						start = 1;
+					}
+					if(started==0)
+					{
+						started = 1;
+						game_btn_down = sources["assets/conti_game_down.png"].item;
+						game_btn_up = sources["assets/conti_game_up.png"].item;
+						layer.removeAnimItem(start_game);
+						layer.addAnimItem(conti_game);
+					}
+					if(zhushu>=max_time)
+					{
+						game_btn_down = sources["assets/conti_btn_down.png"].item;
+						game_btn_up = sources["assets/conti_btn_up.png"].item;
+						layer.removeAnimItem(conti_game);
+						layer.addAnimItem(conti_btn);	
+						layer.addAnimItem(help_btn);	
+					}
+				}
+
+				var help_once = 0;//中奖后置0
+				var help_up_func = function(e){e.target.setChartlet(sources["assets/help_up.png"].item);};
+				var help_down_func = function(e)
+				{
+					e.target.setChartlet(sources["assets/help_down.png"].item);
+					if(help_once==0)
+					{
+						auto = true;
+						ernie.busy = true;
+						ernie.start();
+						help_once = 1;
+						var interval = setInterval(function(){
+							zhushu++;
+							zhushu_text.text = "已投注："+zhushu;
+							/*
+								如果中奖，弹出提示框，置auto=0，busy=0，help_once=0.每秒模拟250000次
+								，恢复游戏开始状态
+							*/
+						},1)
+					}
+				};
+				start_game.addEvent("mousedown",game_down_func);
+				start_game.addEvent("mouseup",game_up_func);
+				conti_game.addEvent("mousedown",game_down_func);
+				conti_game.addEvent("mouseup",game_up_func);
+				conti_btn.addEvent("mousedown",game_down_func);
+				conti_btn.addEvent("mouseup",game_up_func);
+				help_btn.addEvent("mousedown",help_down_func);
+				help_btn.addEvent("mouseup",help_up_func);
+			}
+
 			setInterval(function(){
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);

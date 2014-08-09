@@ -693,6 +693,12 @@ ANEngine.Animation.Animation = function(_obj)
 		return this;
 	}
 
+	this.delay = function(dur)
+	{
+		animations.push({styles:"delay",delay:dur});
+		return this;
+	}
+
 	//interval和timeout每秒200次计算封顶。。。
 	this.update = function()
 	{
@@ -700,6 +706,11 @@ ANEngine.Animation.Animation = function(_obj)
 		if(curAnim==null&&animations.length>0)
 		{
 			curAnim = animations.shift();
+			if(curAnim.styles=="delay")
+			{
+				setTimeout(function(){curAnim=null;},curAnim.delay);
+				return;
+			}
 			//确定速度
 			if(curAnim.speed=="slow")
 				curTotalTime = 3000;
@@ -727,7 +738,7 @@ ANEngine.Animation.Animation = function(_obj)
 			}
 			curCallback = curAnim.callback;
 			var target = this.target;
-			var decision = 1;//计算次数，取style最大值
+			var decision = 10;//计算次数，取style最大值
 			var ini_styles = {};
 			var target_styles = {};
 			for(var style in curAnim.styles)
@@ -743,7 +754,7 @@ ANEngine.Animation.Animation = function(_obj)
 				for(var style in curAnim.styles)
 				{
 					target[style] = curFunc(t,ini_styles[style],target_styles[style],decision);
-					//console.log(style+","+target[style]+",t:"+t);
+					//console.log(style+","+target[style]+",t:"+t+",decision:"+decision);
 				}
 				if(t<decision)
 				{
@@ -984,7 +995,7 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 
 	this.setSpriteSheet = function(_image,_data,_fps)
 	{
-		fps = fps||_fps;
+		fps = _fps||ANEngine.fps;
 		var i = 0;
 		spriteSheetData = [];
 		for(var index in _data.frames)
@@ -1060,7 +1071,7 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 					_curFrame = ++_curFrame>=_totalFrame?0:_curFrame;
 				}
 			}
-			if(this.monitor)
+			if(this.monitor&&isPlay)
 				this.monitor(_curFrame+1,this);
 		}
 		canvas.restore();
@@ -1103,6 +1114,7 @@ ANEngine.Widget.TextStyle = function(font,textAlign,textBaseline,fillStyle,strok
 	this.Clone = function()
 	{
 		var style = new ANEngine.Widget.TextStyle(this.font,this.textAlign,this.textBaseline,this.fillStyle,this.strokeStyle);
+		return style;
 	}
 }
 ANEngine.Widget.Text = function(text,_x,_y,_width,_height,_rotate)

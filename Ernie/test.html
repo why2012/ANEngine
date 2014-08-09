@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<head>
+	<title>Ernie</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../ANEngine/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="../ANEngine/hammer.min.js"></script>
+	<script type="text/javascript" src="../ANEngine/Box2dWeb-2.1.a.3.js"></script>
+	<script type="text/javascript" src="../ANEngine/ANEngine.js"></script>
+	<script type="text/javascript" src="../ANEngine/ANEngine.Util.js"></script>
+</head>
+<body>
+	<script>
+		window.onload = function()
+		{
+			ANEngine.Platform = "mobile";
+			var scene = new ANEngine.Scene(document.getElementById("canvas"));
+			var layer = new ANEngine.Layer();
+			scene.addLayer(layer);
+			var button = new ANEngine.Sprite(0,5,2,.4);button.pivotX=0;button.pivotY=0;
+			var mvc = new ANEngine.MovieClip(5,2,2,2);
+			var mvc_switch = 0,end_frame = 30,back_frame = 16;;
+			var text1 = new ANEngine.Widget.Text("游戏开始",7,2,0,1.1);
+			var textStyle = new ANEngine.Widget.TextStyle();
+			text1.textStyle = textStyle;
+			text1.drawBorder = true;
+			textStyle.strokeStyle = "green";
+			textStyle.fillStyle = "red";
+			textStyle.font = "30px Verdana";
+			text1.drawstyle = 1;
+			textStyle.textBaseline = "hanging";
+			text1.addEvent("mouseover",function(e){e.target.drawstyle=2;});
+			text1.addEvent("mousedown",function(e){e.target.drawstyle=3;});
+			text1.addEvent("mouseup",function(e){e.target.drawstyle=1;});
+			text1.addEvent("mousemoveout",function(e){e.target.drawstyle=1;});
+			mvc.gotoAndPlay(16);mvc.drawBorder = true;
+			mvc.monitor = function(f,m)
+			{
+				if(f==end_frame)
+					m.gotoAndPlay(back_frame);
+			}
+			button.rotate = 1;
+			ANEngine.Util.Window.FullScreen(scene);
+			var loadMonitor = new ANEngine.Util.LoadMonitor();
+			loadMonitor.addImgSource("../assets/wood.png");
+			loadMonitor.addImgSource("../assets/glass.png");
+			loadMonitor.addImgSource("../assets/ta.png");
+			loadMonitor.addJsonSource("../assets/ta.json");
+			loadMonitor.onload = function(l,sources)
+			{
+				mvc.setSpriteSheet(sources["../assets/ta.png"].item,sources["../assets/ta.json"].item,24);
+				mvc.addEvent("mouseup",function(e){
+					if(!mvc_switch)
+					{
+						e.target.gotoAndPlay(1);
+						mvc_switch = 1;
+						end_frame = 15;
+						back_frame = 1;
+					}
+					else
+					{
+						mvc_switch = 0;
+						end_frame = 30;
+						back_frame = 16;
+						e.target.gotoAndPlay(16);
+					}
+				});
+				button.setChartlet(sources["../assets/wood.png"].item);
+				button.addEvent("mouseup",function(e){
+					e.target.setChartlet(sources["../assets/wood.png"].item);
+					button.x=button.rotate=1;
+					button.animation.animate({x:10},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseInOut,function(){console.log("Animation1 end");}).animate({rotate:6.28},3000,ANEngine.Animation.TweenMode.Bounce,ANEngine.Animation.EasingMode.EaseOut,function(){console.log("Animation2 end");});
+				});
+				button.addEvent("mousedown",function(e){
+					e.target.setChartlet(sources["../assets/glass.png"].item);
+				});
+				var btn = button.Clone();
+				btn.scaleW = 5;
+				btn.scaleH = 5;
+				btn.pivotX = btn.width/2;
+				btn.pivotY = btn.height/2;
+				btn.x = 5;
+				btn.animation.animate({scaleW:1,scaleH:1},500,ANEngine.Animation.TweenMode.Circ,ANEngine.Animation.EasingMode.EaseIn)
+				btn.addEvent("mouseup",function(e){
+					e.target.setChartlet(sources["../assets/wood.png"].item);
+				});
+				btn.addEvent("mousedown",function(e){
+					e.target.setChartlet(sources["../assets/glass.png"].item);
+				});
+				layer.addAnimItem(mvc);
+				layer.addAnimItem(text1);
+				layer.addAnimItem(btn);
+				layer.addAnimItem(button);
+			}
+			setInterval(function(){
+				ANEngine.render(scene);
+			},1000/ANEngine.fps);
+		}
+	</script>
+	<canvas id="canvas" style="position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
+</body>
