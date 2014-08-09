@@ -979,6 +979,7 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	var isPlay = true;
 	var lastFrameTime = 0;//播放前一帧的时间
 	var data = null;
+	this.monitor = null;//回调函数，监控每一帧 传递当前帧编号（1开始）和当前MovieClip对象
 	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
 
 	this.setSpriteSheet = function(_image,_data,_fps)
@@ -1020,13 +1021,13 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 
 	this.gotoAndPlay = function(num)
 	{
-		_curFrame = num;
+		_curFrame = num-1;
 		isPlay = true;
 	}
 
 	this.gotoAndStop = function(num)
 	{
-		_curFrame = num;
+		_curFrame = num-1;
 		isPlay = false;
 	}
 
@@ -1059,6 +1060,8 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 					_curFrame = ++_curFrame>=_totalFrame?0:_curFrame;
 				}
 			}
+			if(this.monitor)
+				this.monitor(_curFrame+1,this);
 		}
 		canvas.restore();
 	}
@@ -1068,6 +1071,80 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		var co = this.DisplayObject_Clone();
 		co.setSpriteSheet(image,data,fps);
 		//co.physicalSkin = physicalSkin.Clone();
+		return co;
+	}
+}
+/*
+font:
+
+textAlign:
+	start	默认。文本在指定的位置开始。
+	end	文本在指定的位置结束。
+	center	文本的中心被放置在指定的位置。
+	left	文本左对齐。
+	right	文本右对齐。
+
+textBaseline:
+	alphabetic	默认。文本基线是普通的字母基线。
+	top	文本基线是 em 方框的顶端。
+	hanging	文本基线是悬挂基线。
+	middle	文本基线是 em 方框的正中。
+	ideographic	文本基线是表意基线。
+	bottom	文本基线是 em 方框的底端。
+*/
+ANEngine.Text = function(text,_x,_y,_width,_height,_rotate)
+{
+	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
+
+	this.text = text;
+	this.font = "";
+	this.textAlign = "";
+	this.textBaseline = "";
+	this.drawstyle = 1;//1：填充，2：镂空，3：填充和镂空
+	this.fillStyle = "";
+	this.strokeStyle = ""; 
+	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+
+	this.draw = function(canvas)
+	{
+		var phyAttr = this.physicalSkin.getPhyAttr();
+		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
+		{
+			this.x = phyAttr.body.GetPosition().x-this.width/2;
+			this.y = phyAttr.body.GetPosition().y-this.height/2;
+			this.rotate = phyAttr.body.GetAngle();
+		}
+		canvas.save();
+		this.preDraw(canvas);//调用基类的预处理
+		if(this.font)
+			canvas.font = this.font
+		if(this.textAlign)
+			canvas.textAlign = this.textAlign;
+		if(this.textBaseline)
+			canvas.textBaseline = this.textBaseline;
+		if(this.drawstyle==1||this.drawstyle==3)
+			canvas.fillStyle = this.fillStyle;
+		if(this.drawstyle==2||this.drawstyle==3)
+			canvas.strokeStyle = this.strokeStyle;
+		this.width = canvas.measureText(this.text).width/ANEngine.drawScale;
+		if(this.drawstyle==2||this.drawstyle==3)
+			canvas.strokeText(this.text,this.x*ANEngine.drawScale,this.y*ANEngine.drawScale);
+		if(this.drawstyle==1||this.drawstyle==3)
+			canvas.fillText(this.text,this.x*ANEngine.drawScale,this.y*ANEngine.drawScale);
+		canvas.restore();
+	}
+
+	this.Clone = function()
+	{
+		var co = this.DisplayObject_Clone();
+		co.text=this.text;
+		co.font=this.font;
+		co.textAlign=this.textAlign;
+		co.textBaseline=this.textBaseline;
+		co.hollowed_out=this.hollowed_out;
+		co.filling=this.filling;
+		co.fillStyle=this.fillStyle;
+		co.strokeStyle=this.strokeStyle;
 		return co;
 	}
 }
