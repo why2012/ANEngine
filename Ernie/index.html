@@ -27,6 +27,8 @@
 				var _this = this;
 				this.callback = null;
 				this.busy = false;
+				this.result_callback = null;
+				this.playSuccess_callback = null;
 				this.anim.monitor = function(f,m)
 				{
 					if(_this.callback)
@@ -41,7 +43,13 @@
 								m.gotoAndPlay(success);
 						}
 						if(f==success_end||f==fail_end)
+						{							
 							m.stop();
+							if(_this.result_callback)
+								_this.result_callback(_this.cur_status);
+							if(_this.playSuccess_callback)
+								_this.playSuccess_callback(_this.cur_status);
+						}
 					}
 					else
 					{
@@ -55,8 +63,9 @@
 					this.anim.setSpriteSheet(img,json,24);
 				}
 
-				this.start = function()
+				this.start = function(rc)
 				{
+					this.result_callback = rc;
 					this.anim.gotoAndPlay(start);
 				}
 
@@ -65,46 +74,128 @@
 					this.anim.gotoAndStop(_default);
 				}
 
+				this.playSuccess = function(c)
+				{
+					this.playSuccess_callback = c;
+					this.anim.gotoAndPlay(success);
+				}
+
 				this.get = function(name)
 				{
 
 					switch(name)
 					{
 						case "success_end":return success_end;break;
+						case "success":return success;break;
 						case "fail_end":return fail_end;break;
+						case "fail":return fail;break;
 						case "end":return end;break;
 						case "start":return start;break;
 					}
 				}
 			}
 
+		//
+			var start = 0;
+			var started = 0;
+			var zhushu = 0;
+			var max_time = 5;//出现自动帮投的次数限制
+			var auto_max_time = 3;//根据此设置弹出框
+			var help_once = 0;
+			var auto = false;//自动帮投
+			var ernie = null;
+		//
+
+		var again_btn = new ANEngine.Sprite(2.8,8.3,2.3,1);//again_btn.drawBorder = true;
+		var proud_btn = new ANEngine.Sprite(7,8.3,2.3,1);//proud_btn.drawBorder = true;
+		var close_popup_btn = new ANEngine.Sprite(8.8,2.3,1.2,1);//close_popup_btn.drawBorder = true;
+		var popup_box = new ANEngine.Sprite(2,2,8,8);
+		var zhushu_result_text = new ANEngine.Widget.Text(0,4.1,3.3,0,.5);
+		var price_text = new ANEngine.Widget.Text(0,5.1,4.1,0,.5);
+		var result_text_style = new ANEngine.Widget.TextStyle();
+		result_text_style.textBaseline = "hanging";
+		result_text_style.font = "10px Verdana";
+		zhushu_result_text.textStyle = result_text_style;
+		price_text.textStyle = result_text_style;
+		var cover = new ANEngine.Sprite(0,0,100,100);//cover.drawBorder = true;
+
+		var start_game = new ANEngine.Sprite(3.7,12,4,1.5);//开始游戏
+		var conti_game = new ANEngine.Sprite(3.7,12,4,1.5);//继续投注
+		var conti_btn = new ANEngine.Sprite(3.7,12,4,1.5);//继续自己投
+		var help_btn = new ANEngine.Sprite(3.7,14,4,1.5);//中彩帮投
+		var zhushu_text= new ANEngine.Widget.Text("已投注：0",3.7,1,0,1.1);
+		start_game.name = "start_game";
+		conti_game.name = "conti_game";
+		conti_btn.name = "conti_btn";
+		help_btn.name = "help_btn";
+		var layer = new ANEngine.Layer();
+
 		function getResult()
 		{
-			return	Math.floor(Math.random()*2);
+			var result = Math.floor(Math.random()*200);
+			if(result == 1)//中奖
+			{
+				return 1;
+			}
+			return 0;
 		}
+
+		function resetGame()
+		{
+			auto=0;
+			ernie.busy=0;
+			help_once=0;
+			started = 0;
+			start = 0;
+			layer.removeAnimItem(conti_game);
+			layer.removeAnimItem(conti_btn);
+			layer.removeAnimItem(help_btn);
+		}
+
+		function popup(img)
+		{
+			popup_box.setChartlet(img);
+			price_text.text = "";
+			zhushu_result_text.text = zhushu;
+			price_text.text = zhushu*2;
+			layer.addAnimItem(start_game);
+			layer.addAnimItem(cover);
+			layer.addAnimItem(popup_box);
+			layer.addAnimItem(zhushu_result_text);
+			layer.addAnimItem(price_text);
+			layer.addAnimItem(again_btn);
+			layer.addAnimItem(proud_btn);
+			layer.addAnimItem(close_popup_btn);
+		}
+
+		function popup_hide()
+		{
+			zhushu = 0;
+			zhushu_text.text = "已投注：0";
+			layer.removeAnimItem(zhushu_result_text);
+			layer.removeAnimItem(price_text);
+			layer.removeAnimItem(popup_box);
+			layer.removeAnimItem(again_btn);
+			layer.removeAnimItem(proud_btn);
+			layer.removeAnimItem(cover);	
+			layer.removeAnimItem(close_popup_btn);
+		}
+
+		//关闭弹出框
+		again_btn.addEvent("mouseup",popup_hide);
+		proud_btn.addEvent("mouseup",popup_hide);
+		close_popup_btn.addEvent("mouseup",popup_hide);
 	</script>
 	<script>
 		window.onload = function()
 		{
-			//
-				var start = 0;
-				var zhushu = 0;
-				var max_time = 5;
-				var auto = false;//自动帮投
-			//
 			ANEngine.Platform = "mobile";//"desktop" "mobile"
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			ANEngine.Util.Window.FullScreen(scene);
-			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
-			var ernie = new Ernie();
+			ernie = new Ernie();
 			//Text
-			var start_game = new ANEngine.Sprite(3.7,12,4,1.5);
-			var conti_game = new ANEngine.Sprite(3.7,12,4,1.5);
-			var conti_btn = new ANEngine.Sprite(3.7,12,4,1.5);
-			var help_btn = new ANEngine.Sprite(3.7,14,4,1.5);
 			layer.addAnimItem(start_game);
-			var zhushu_text= new ANEngine.Widget.Text("已投注：0",3.7,1,0,1.1);
 			layer.addAnimItem(zhushu_text);
 			var notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",3.7,2,0,1.1);
 			notice.alpha = 0;
@@ -133,7 +224,7 @@
 				if(f==ernie.get("success_end")||f==ernie.get("fail_end"))
 					start = 0;
 				if(f==ernie.get("fail_end"))
-					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn).delay(1000).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);
+					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn).delay(100).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);
 			}
 
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
@@ -147,6 +238,8 @@
 			loadMonitor.addImgSource("assets/conti_btn_down.png");
 			loadMonitor.addImgSource("assets/help_up.png");
 			loadMonitor.addImgSource("assets/help_down.png");
+			loadMonitor.addImgSource("assets/popup_high_250.png");
+			loadMonitor.addImgSource("assets/popup_low_250.png");
 			loadMonitor.addImgSource("assets/bg.png",function(img){
 				scene.setBG(img);
 			});
@@ -164,20 +257,41 @@
 				var game_btn_down = sources["assets/start_game_down.png"].item;
 				var game_btn_up = sources["assets/start_game_up.png"].item;
 				var game_down_func = function(e){e.target.setChartlet(game_btn_down);};
-				var started = 0;
 				var game_up_func = function(e)
 				{
 					e.target.setChartlet(game_btn_up);
 					if(auto)return;
+					//每轮结果
 					if(start==0)
 					{
 						//如果中奖弹出提示框，恢复游戏开始状态
-						ernie.cur_status = getResult();
+						var result = getResult();
+						ernie.cur_status = result;
 						zhushu++;
-						ernie.start();
+						ernie.start(function(r){
+							if(result==1)
+							{
+								if(zhushu<=auto_max_time)
+									popup(sources["assets/popup_low_250.png"].item);
+								else
+									popup(sources["assets/popup_high_250.png"].item);
+								if(ernie.cur_status==1)
+								{
+									game_btn_down = sources["assets/start_game_down.png"].item;
+									game_btn_up = sources["assets/start_game_up.png"].item;
+									resetGame();
+									return;
+								}
+							}
+						});
 						zhushu_text.text = "已投注："+zhushu;
 						start = 1;
+						if(ernie.cur_status==1)
+						{
+							return;
+						}
 					}
+					//开始按钮切换
 					if(started==0)
 					{
 						started = 1;
@@ -186,17 +300,17 @@
 						layer.removeAnimItem(start_game);
 						layer.addAnimItem(conti_game);
 					}
+					//大于5注，显示自动投注按钮
 					if(zhushu>=max_time)
 					{
 						game_btn_down = sources["assets/conti_btn_down.png"].item;
 						game_btn_up = sources["assets/conti_btn_up.png"].item;
 						layer.removeAnimItem(conti_game);
-						layer.addAnimItem(conti_btn);	
-						layer.addAnimItem(help_btn);	
+						layer.addAnimItem(conti_btn);
+						layer.addAnimItem(help_btn);		
 					}
 				}
 
-				var help_once = 0;//中奖后置0
 				var help_up_func = function(e){e.target.setChartlet(sources["assets/help_up.png"].item);};
 				var help_down_func = function(e)
 				{
@@ -207,14 +321,35 @@
 						ernie.busy = true;
 						ernie.start();
 						help_once = 1;
-						var interval = setInterval(function(){
+						var auto_func = function()
+						{
 							zhushu++;
 							zhushu_text.text = "已投注："+zhushu;
 							/*
 								如果中奖，弹出提示框，置auto=0，busy=0，help_once=0.每秒模拟250000次
 								，恢复游戏开始状态
 							*/
-						},1)
+							if(getResult()==1)
+							{
+								//ernie.cur_status = 1;
+								ernie.busy = 0;
+								ernie.playSuccess(function(){
+									if(zhushu<=auto_max_time)
+										popup(sources["assets/popup_low_250.png"].item);
+									else
+										popup(sources["assets/popup_high_250.png"].item);
+									game_btn_down = sources["assets/start_game_down.png"].item;
+									game_btn_up = sources["assets/start_game_up.png"].item;
+									ernie.playSuccess_callback = null;
+									resetGame();
+								});
+							}
+							else
+							{
+								setTimeout(auto_func,1)
+							}
+						};
+						auto_func();
 					}
 				};
 				start_game.addEvent("mousedown",game_down_func);

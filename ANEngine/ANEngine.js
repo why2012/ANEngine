@@ -54,7 +54,7 @@ ANEngine.Scene = function(_canvas)
 	var mouseEventDetector = new ANEngine.Event.MouseEventDetector(_canvas);
 	mouseEventDetector.onclick = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.onclick(e,pos))
 				break;
@@ -63,7 +63,7 @@ ANEngine.Scene = function(_canvas)
 
 	mouseEventDetector.mousedown = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.mousedown(e,pos))
 				break;
@@ -72,7 +72,7 @@ ANEngine.Scene = function(_canvas)
 
 	mouseEventDetector.mouseup = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.mouseup(e,pos))
 				break;
@@ -81,7 +81,7 @@ ANEngine.Scene = function(_canvas)
 
 	mouseEventDetector.mouseover = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.mouseover(e,pos))
 				break;
@@ -90,7 +90,7 @@ ANEngine.Scene = function(_canvas)
 
 	mouseEventDetector.mousemove = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.mousemove(e,pos))
 				break;
@@ -99,7 +99,7 @@ ANEngine.Scene = function(_canvas)
 
 	mouseEventDetector.mousemoveout = function(e,pos)
 	{
-		for(var l in layers)
+		for(var l=layers.length-1;l>=0;l--)
 		{
 			if(layers[l].mouseEventDetector.mousemoveout(e,pos))
 				break;
@@ -179,7 +179,7 @@ ANEngine.Layer = function()
 	var _this = this;
 	this.mouseEventDetector.onclick = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"click"))
 				return true;
@@ -190,7 +190,7 @@ ANEngine.Layer = function()
 
 	this.mouseEventDetector.mousedown = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
 			{
@@ -204,12 +204,11 @@ ANEngine.Layer = function()
 
 	this.mouseEventDetector.mouseup = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			//mouseup事件与鼠标位置无关
 			if(animItemPool[a].mouse_down&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
 			{
-				animItemPool[a].mouse_down = false;
 				return true;
 			}
 			animItemPool[a].mouse_down = false;
@@ -220,7 +219,7 @@ ANEngine.Layer = function()
 
 	this.mouseEventDetector.mouseover = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(!animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseover"))
 			{
@@ -233,7 +232,7 @@ ANEngine.Layer = function()
 
 	this.mouseEventDetector.mousemoveout = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemoveout",true))
 			{
@@ -246,16 +245,10 @@ ANEngine.Layer = function()
 
 	this.mouseEventDetector.mousemove = function(e,pos)
 	{
-		for(var a in animItemPool)
+		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemove"))
-			{
-				animItemPool[a].mouse_on_me = true;
 				return true;
-			}
-			else
-				animItemPool[a].mouse_on_me = false;
-
 		}
 
 		return false;
@@ -271,6 +264,7 @@ ANEngine.Layer = function()
 	{
 		animItemPool.push(animItem);
 		animItem.layer = this;
+		return animItem;
 	}
 
 	//移除元素
@@ -284,6 +278,14 @@ ANEngine.Layer = function()
 		}
 
 		return null;
+	}
+
+	this.contains = function(animItem)
+	{
+		if(animItemPool.indexOf(animItem)!=-1)
+			return true;
+		else
+			return false;
 	}
 
 	//添加可视元素的物理外形
@@ -492,6 +494,8 @@ ANEngine.Event.MouseEventDetector = function(dom)
 			{
 				if(!reverse)
 				{
+					if(eventname=="mousemove")
+						obj.mouse_on_me = true;
 					var event = new ANEngine.Event.Event(eventname,obj);
 					event.x = pos.x;
 					event.y = pos.y;
@@ -499,8 +503,13 @@ ANEngine.Event.MouseEventDetector = function(dom)
 					return true;
 				}
 			}
+			else if(eventname=="mousemove")
+			{
+				obj.mouse_on_me = false;
+			}
 			else if(eventname=="mouseup")
 			{
+				obj.mouse_down = false;
 				var event = new ANEngine.Event.Event(eventname,obj);
 				event.x = pos.x;
 				event.y = pos.y;
