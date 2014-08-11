@@ -16,7 +16,7 @@
 	<script>
 		var Ernie = function()
 			{
-				this.anim = new ANEngine.MovieClip(2,3,8,8);
+				this.anim = new ANEngine.MovieClip(-.5,0,12,12);
 				var _default = 1;
 				var start = 2;
 				var end = 16;
@@ -112,20 +112,20 @@
 		var proud_btn = new ANEngine.Sprite(6.1,8.6,5.5,1.16);//proud_btn.drawBorder = true;
 		var close_popup_btn = new ANEngine.Sprite(10.3,2,1.3,1.2);//close_popup_btn.drawBorder = true;
 		var popup_box = new ANEngine.Sprite(.5,2,11.14,7.8);
-		var zhushu_result_text = new ANEngine.Widget.Text(0,4.8,2.7,0,.5);
-		var price_text = new ANEngine.Widget.Text(0,5.7,4.13,0,.5);
+		var zhushu_result_text = new ANEngine.Widget.Text(0,5.1,2.65,0,.5);
+		var price_text = new ANEngine.Widget.Text(0,6,3.9,0,.5);
 		var result_text_style = new ANEngine.Widget.TextStyle();
 		result_text_style.fillStyle = "black";
 		result_text_style.textBaseline = "hanging";
-		result_text_style.font = "17px 微软雅黑";
+		result_text_style.font = "12px 微软雅黑";
 		zhushu_result_text.textStyle = result_text_style;
 		price_text.textStyle = result_text_style;
 		var cover = new ANEngine.Sprite(0,0,100,100);//cover.drawBorder = true;
 
-		var start_game = new ANEngine.Sprite(3.7,12,4,1.5);//开始游戏
-		var conti_game = new ANEngine.Sprite(3.7,12,4,1.5);//继续投注
-		var conti_btn = new ANEngine.Sprite(3.7,12,4,1.5);//继续自己投
-		var help_btn = new ANEngine.Sprite(3.7,14,4,1.5);//中彩帮投
+		var start_game = new ANEngine.Sprite(3,12,4.5,1.5);//开始游戏
+		var conti_game = new ANEngine.Sprite(3,12,4.5,1.5);//继续投注
+		var conti_btn = new ANEngine.Sprite(3,12,4.5,1.5);//继续自己投
+		var help_btn = new ANEngine.Sprite(3,14,4.5,1.5);//中彩帮投
 		var zhushu_text= new ANEngine.Widget.Text("已投注：0",3.7,1,0,1.1);
 		start_game.name = "start_game";
 		conti_game.name = "conti_game";
@@ -171,7 +171,7 @@
 			layer.addAnimItem(close_popup_btn);
 		}
 
-		function popup_hide()
+		function popup_hide(e)
 		{
 			zhushu = 0;
 			zhushu_text.text = "已投注：0";
@@ -182,6 +182,8 @@
 			layer.removeAnimItem(proud_btn);
 			layer.removeAnimItem(cover);	
 			layer.removeAnimItem(close_popup_btn);
+			if(e.target==proud_btn)
+				alert("请点击右上角分享");
 		}
 
 		//关闭弹出框
@@ -193,11 +195,12 @@
 		window.onload = function()
 		{
 			ANEngine.Platform = "desktop";//"desktop" "mobile"
+			//ANEngine.SpecialPlatform = "IOS";
 			ANEngine.Scene.ShowFPS = false;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			ANEngine.Util.Window.FullScreen(scene);
 			scene.addLayer(layer);
-			ernie = new Ernie();
+			ernie = new Ernie();//ernie.anim.drawBorder = true;
 			//Text
 			layer.addAnimItem(start_game);
 			layer.addAnimItem(zhushu_text);
@@ -207,7 +210,7 @@
 
 			var textStyle = new ANEngine.Widget.TextStyle();
 			textStyle.strokeStyle = "green";
-			textStyle.fillStyle = "blue";
+			textStyle.fillStyle = "#8B95C8";
 			textStyle.font = "20px 微软雅黑";
 			textStyle.textBaseline = "hanging";
 			zhushu_text.textStyle = textStyle;
@@ -379,6 +382,9 @@
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}
+	</script>
+	<script>
+
 	</script>
 	<canvas id="canvas" style="position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
 </body>

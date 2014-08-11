@@ -7,6 +7,8 @@ var ANEngine = function()
 
 }
 ANEngine.Platform = "desktop";//or mobile or both
+//ANEngine.SpecialPlatform = "None";//IOS; 对于IOS移动平台，图片裁剪高宽减为一半，需要双缓冲来消除闪烁 ,研究中
+ANEngine.EnabledBuffer = false;//缓冲
 ANEngine.drawScale = 30;//一单位对应30像素
 ANEngine.offsetX = 0;//X平移 camera
 ANEngine.offsetY = 0;//y平移 camera
@@ -47,6 +49,8 @@ ANEngine.Scene = function(_canvas)
 	this.canvas = _canvas;
 	this.whFactor = width/height;
 	var canvas = _canvas.getContext("2d");
+	/*var canvas_buffer = document.createElement('canvas');//缓冲
+	var ctx_buffer = canvas_buffer.getContext("2d");*/
 	var layers = new Array();
 	var backgroud = null;
 	var camera = null;
@@ -137,6 +141,8 @@ ANEngine.Scene = function(_canvas)
 		curTime = new Date().getTime()
 		width = _canvas.width
 		height = _canvas.height;
+		/*canvas_buffer.width = width;
+		canvas_buffer.height = height;*/
 		this.whFactor = width/height;
 		canvas.clearRect(0,0,width,height);
 		if(backgroud!=null)
@@ -1070,7 +1076,10 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 			var curTime = new Date().getTime();
 			var interval = curTime-lastFrameTime;
 			var frame = spriteSheetData[_curFrame].frameData;
-			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w,frame.frame.h,
+			var drawRatio = 1;
+			if(ANEngine.SpecialPlatform=="IOS")
+				drawRatio = 2;
+			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w/drawRatio,frame.frame.h/drawRatio,
 					this.x*ANEngine.drawScale,
 					this.y*ANEngine.drawScale,
 					this.width*ANEngine.drawScale,
