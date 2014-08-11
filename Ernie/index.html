@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-	<title>Ernie</title>
+	<title>中500万对你有多难(测试类)</title>
 	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -100,21 +100,24 @@
 			var started = 0;
 			var zhushu = 0;
 			var max_time = 5;//出现自动帮投的次数限制
-			var auto_max_time = 3;//根据此设置弹出框
 			var help_once = 0;
 			var auto = false;//自动帮投
 			var ernie = null;
+			var rate = 5000000;
+			var right_number = Math.floor(Math.random()*rate);
+			var auto_max_time = Math.ceil(rate/100);//根据此设置弹出框
 		//
 
-		var again_btn = new ANEngine.Sprite(2.8,8.3,2.3,1);//again_btn.drawBorder = true;
-		var proud_btn = new ANEngine.Sprite(7,8.3,2.3,1);//proud_btn.drawBorder = true;
-		var close_popup_btn = new ANEngine.Sprite(8.8,2.3,1.2,1);//close_popup_btn.drawBorder = true;
-		var popup_box = new ANEngine.Sprite(2,2,8,8);
-		var zhushu_result_text = new ANEngine.Widget.Text(0,4.1,3.3,0,.5);
-		var price_text = new ANEngine.Widget.Text(0,5.1,4.1,0,.5);
+		var again_btn = new ANEngine.Sprite(.5,8.6,5.5,1.13);//again_btn.drawBorder = true;
+		var proud_btn = new ANEngine.Sprite(6.1,8.6,5.5,1.16);//proud_btn.drawBorder = true;
+		var close_popup_btn = new ANEngine.Sprite(10.3,2,1.3,1.2);//close_popup_btn.drawBorder = true;
+		var popup_box = new ANEngine.Sprite(.5,2,11.14,7.8);
+		var zhushu_result_text = new ANEngine.Widget.Text(0,4.8,2.7,0,.5);
+		var price_text = new ANEngine.Widget.Text(0,5.7,4.13,0,.5);
 		var result_text_style = new ANEngine.Widget.TextStyle();
+		result_text_style.fillStyle = "black";
 		result_text_style.textBaseline = "hanging";
-		result_text_style.font = "10px Verdana";
+		result_text_style.font = "17px 微软雅黑";
 		zhushu_result_text.textStyle = result_text_style;
 		price_text.textStyle = result_text_style;
 		var cover = new ANEngine.Sprite(0,0,100,100);//cover.drawBorder = true;
@@ -132,8 +135,8 @@
 
 		function getResult()
 		{
-			var result = Math.floor(Math.random()*200);
-			if(result == 1)//中奖
+			var result = Math.floor(Math.random()*rate);
+			if(result == right_number)//中奖
 			{
 				return 1;
 			}
@@ -189,7 +192,8 @@
 	<script>
 		window.onload = function()
 		{
-			ANEngine.Platform = "mobile";//"desktop" "mobile"
+			ANEngine.Platform = "desktop";//"desktop" "mobile"
+			ANEngine.Scene.ShowFPS = false;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			ANEngine.Util.Window.FullScreen(scene);
 			scene.addLayer(layer);
@@ -204,7 +208,7 @@
 			var textStyle = new ANEngine.Widget.TextStyle();
 			textStyle.strokeStyle = "green";
 			textStyle.fillStyle = "blue";
-			textStyle.font = "20px Verdana";
+			textStyle.font = "20px 微软雅黑";
 			textStyle.textBaseline = "hanging";
 			zhushu_text.textStyle = textStyle;
 			var notice_style = textStyle.Clone();
@@ -246,7 +250,7 @@
 
 			loadMonitor.onload = function(len,sources)
 			{
-				ernie.anim.drawBorder = true;
+				//ernie.anim.drawBorder = true;
 				ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
 				layer.addAnimItem(ernie.anim);
 				//start_game
@@ -323,29 +327,38 @@
 						help_once = 1;
 						var auto_func = function()
 						{
-							zhushu++;
-							zhushu_text.text = "已投注："+zhushu;
-							/*
-								如果中奖，弹出提示框，置auto=0，busy=0，help_once=0.每秒模拟250000次
-								，恢复游戏开始状态
-							*/
-							if(getResult()==1)
+							var num = Math.floor(Math.random()*1000)+2000;
+							var help_result = 0;
+							for(var i=0;i<num;i++)
 							{
-								//ernie.cur_status = 1;
-								ernie.busy = 0;
-								ernie.playSuccess(function(){
-									if(zhushu<=auto_max_time)
-										popup(sources["assets/popup_low_250.png"].item);
-									else
-										popup(sources["assets/popup_high_250.png"].item);
-									game_btn_down = sources["assets/start_game_down.png"].item;
-									game_btn_up = sources["assets/start_game_up.png"].item;
-									ernie.playSuccess_callback = null;
-									resetGame();
-								});
+								/*
+									如果中奖，弹出提示框，置auto=0，busy=0，help_once=0.每秒模拟250000次
+									，恢复游戏开始状态
+								*/
+								if((help_result=getResult())==1)
+								{
+									//ernie.cur_status = 1;
+									zhushu += i+1;
+									zhushu_text.text = "已投注："+zhushu;
+									ernie.busy = 0;
+									ernie.playSuccess(function(){
+										if(zhushu<=auto_max_time)
+											popup(sources["assets/popup_low_250.png"].item);
+										else
+											popup(sources["assets/popup_high_250.png"].item);
+										game_btn_down = sources["assets/start_game_down.png"].item;
+										game_btn_up = sources["assets/start_game_up.png"].item;
+										ernie.playSuccess_callback = null;
+										resetGame();
+									});
+									break;
+								}
 							}
-							else
+
+							if(help_result==0)
 							{
+								zhushu += num;
+								zhushu_text.text = "已投注："+zhushu;
 								setTimeout(auto_func,1)
 							}
 						};

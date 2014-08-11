@@ -157,10 +157,13 @@ ANEngine.Scene = function(_canvas)
 		}
 		canvas.translate(-ANEngine.offsetX*ANEngine.drawScale,-ANEngine.offsetY*ANEngine.drawScale);
 		//FPS Text
-		canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
+		if(ANEngine.Scene.ShowFPS)
+			canvas.strokeText(Math.floor(1000/(curTime-prevTime)),10,10);
 		prevTime = curTime;
 	}
 }
+
+ANEngine.Scene.ShowFPS = true;
 
 
 ANEngine.Layer = function()
