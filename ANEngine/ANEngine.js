@@ -198,7 +198,7 @@ ANEngine.Layer = function()
 	}
 
 	this.mouseEventDetector.mousedown = function(e,pos)
-	{
+	{//console.log(pos);
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
@@ -997,6 +997,9 @@ ANEngine.Sprite = function(_x,_y,_width,_height,_rotate)
 }
 
 //影片剪辑
+/*
+	解决IOS平台浏览其播放影片闪烁，异常有两种方案：1.图片序列应低于4096px；2.使用张图片组成的序列调用setImageSequence 并设置 useSequencePic 为true，序列加载可用Loadmonitor.addImgSequence
+*/
 ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 {
 	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
@@ -1010,6 +1013,12 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 	var data = null;
 	this.monitor = null;//回调函数，监控每一帧 传递当前帧编号（1开始）和当前MovieClip对象
 	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+	/*
+		IOS浏览器似乎对高分辨率的单张整合的图片序列的处理有问题
+		这里可以开启使用多张独立图片作为动画序列的模式
+	*/
+	this.useSequencePic = false;//使用多张序列图
+	var image_sequence = new Array();
 
 	this.setSpriteSheet = function(_image,_data,_fps)
 	{
@@ -1026,6 +1035,16 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		_totalFrame = i;
 		image = _image;
 		totalFrame = spriteSheetData.length;
+	}
+
+	this.setImageSequence = function(images,_fps,clear)
+	{
+		fps = _fps||ANEngine.fps;
+		if(clear)
+			image_sequence = images
+		else
+			image_sequence = image_sequence.concat(images);
+		_totalFrame = image_sequence.length;
 	}
 
 	this.totalFrame = function()
@@ -1071,19 +1090,28 @@ ANEngine.MovieClip = function(_x,_y,_width,_height,_rotate)
 		}
 		canvas.save();
 		this.preDraw(canvas);//调用基类的预处理
-		if(image!=null)
+		if(image!=null||(this.useSequencePic&&image_sequence.length!=0))
 		{
 			var curTime = new Date().getTime();
 			var interval = curTime-lastFrameTime;
-			var frame = spriteSheetData[_curFrame].frameData;
-			var drawRatio = 1;
-			if(ANEngine.SpecialPlatform=="IOS")
-				drawRatio = 2;
-			canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w/drawRatio,frame.frame.h/drawRatio,
+			if(!this.useSequencePic)
+			{
+				var frame = spriteSheetData[_curFrame].frameData;
+				canvas.drawImage(image,frame.frame.x,frame.frame.y,frame.frame.w,frame.frame.h,
 					this.x*ANEngine.drawScale,
 					this.y*ANEngine.drawScale,
 					this.width*ANEngine.drawScale,
 					this.height*ANEngine.drawScale);
+			}
+			else
+			{
+				canvas.drawImage(image_sequence[_curFrame],
+					this.x*ANEngine.drawScale,
+					this.y*ANEngine.drawScale,
+					this.width*ANEngine.drawScale,
+					this.height*ANEngine.drawScale);
+			}
+
 			if(!fps||interval>=1000/fps)
 			{
 				lastFrameTime = curTime;

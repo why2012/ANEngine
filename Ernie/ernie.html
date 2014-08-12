@@ -16,7 +16,7 @@
 	<script>
 		var Ernie = function()
 			{
-				this.anim = new ANEngine.MovieClip(-.5,0,12,12);
+				this.anim = new ANEngine.MovieClip(-1.3,-.4,13,12.5);
 				var _default = 1;
 				var start = 2;
 				var end = 16;
@@ -61,6 +61,12 @@
 				this.setSrc = function(img,json)
 				{
 					this.anim.setSpriteSheet(img,json,24);
+				}
+
+				this.setSec = function(imgs)
+				{
+					this.anim.setImageSequence(imgs,24);
+					this.anim.useSequencePic = true;
 				}
 
 				this.start = function(rc)
@@ -132,6 +138,7 @@
 		conti_btn.name = "conti_btn";
 		help_btn.name = "help_btn";
 		var layer = new ANEngine.Layer();
+		var banner = new ANEngine.Sprite(0,15.8,$(window).width()/ANEngine.drawScale,3);
 
 		function getResult()
 		{
@@ -194,7 +201,7 @@
 	<script>
 		window.onload = function()
 		{
-			ANEngine.Platform = "desktop";//"desktop" "mobile"
+			ANEngine.Platform = "";//"desktop" "mobile"
 			//ANEngine.SpecialPlatform = "IOS";
 			ANEngine.Scene.ShowFPS = false;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
@@ -206,7 +213,6 @@
 			layer.addAnimItem(zhushu_text);
 			var notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",3.7,2,0,1.1);
 			notice.alpha = 0;
-			layer.addAnimItem(notice);
 
 			var textStyle = new ANEngine.Widget.TextStyle();
 			textStyle.strokeStyle = "green";
@@ -235,8 +241,8 @@
 			}
 
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
-			loadMonitor.addImgSource("assets/ernie.png");
-			loadMonitor.addJsonSource("assets/ernie.json");
+			/*loadMonitor.addImgSource("assets/ernie.png");
+			loadMonitor.addJsonSource("assets/ernie.json");*/
 			loadMonitor.addImgSource("assets/start_game_down.png");
 			loadMonitor.addImgSource("assets/start_game_up.png");
 			loadMonitor.addImgSource("assets/conti_game_up.png");
@@ -247,20 +253,37 @@
 			loadMonitor.addImgSource("assets/help_down.png");
 			loadMonitor.addImgSource("assets/popup_high_250.png");
 			loadMonitor.addImgSource("assets/popup_low_250.png");
+			loadMonitor.addImgSource("assets/banner.jpg");
+			var sec = new Array();
+			for(var i=1;i<=24;i++)
+				if(i<10)
+					sec.push("assets/png_sequence_low/Ernie000"+i+".png");
+				else
+					sec.push("assets/png_sequence_low/Ernie00"+i+".png");
+			loadMonitor.addImgSequence("ernie",sec,function(imgs,items){ernie.setSec(imgs)});
 			loadMonitor.addImgSource("assets/bg.png",function(img){
 				scene.setBG(img);
 			});
 
+			loadMonitor.onprogress = function(cur,t)
+			{
+				console.log(cur/t);
+			}
+
 			loadMonitor.onload = function(len,sources)
 			{
 				//ernie.anim.drawBorder = true;
-				ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
+				//ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
 				layer.addAnimItem(ernie.anim);
+				layer.addAnimItem(notice);
 				//start_game
 				start_game.setChartlet(sources["assets/start_game_up.png"].item);
 				conti_game.setChartlet(sources["assets/conti_game_up.png"].item);
 				conti_btn.setChartlet(sources["assets/conti_btn_up.png"].item);
 				help_btn.setChartlet(sources["assets/help_up.png"].item);
+				//banner
+				banner.setChartlet(sources["assets/banner.jpg"].item);
+				layer.addAnimItem(banner);
 				var game_btn_down = sources["assets/start_game_down.png"].item;
 				var game_btn_up = sources["assets/start_game_up.png"].item;
 				var game_down_func = function(e){e.target.setChartlet(game_btn_down);};

@@ -75,6 +75,53 @@ ANEngine.Util.LoadMonitor = function()
         sources[src] = {item:img,src:src,loaded:false};
     }
 
+    //callback(imgs,items)
+    this.addImgSequence = function(name,srcSec,callback)
+    {
+        var _this = this;
+        var _sources = sources;
+        var total = srcSec.length;
+        var cur = 0;
+        var items = new Array();
+        var imgs = new Array();
+        sources[name] = {images:null,item:null,src:name,loaded:false};
+        for(var i=0;i<total;i++)
+        {
+            var img = new Image();
+            img.src = srcSec[i];
+            items.push({image:img,src:srcSec[i],index:i});
+            img.onload = function()
+            {
+                cur++;
+                if(cur==total)
+                {
+                    items.sort(function(a,b){
+                        return (a.index-b.index)>=0?1:-1;
+                    });
+                    for(var imgi in items)
+                        imgs.push(items[imgi].image);
+                    if(callback)
+                        callback(imgs,items);
+                    sources[name].item = items;
+                    sources[name].images = imgs;
+                    sources[name].loaded = true;
+                    var sourcesLen = 0;
+                    for(var i in _sources)
+                        sourcesLen++;
+                    var loadedNum = _this.getLoadedSrcNum();
+                    if(_this.onprogress)
+                    {
+                        _this.onprogress(loadedNum,sourcesLen);        
+                    }
+                    if(loadedNum==sourcesLen&&_this.onload)
+                    {
+                        _this.onload(sourcesLen,_sources);
+                    }
+                }
+            }
+        }
+    }
+
     this.addJsonSource = function(src,callback)
     {
         var _this = this;
