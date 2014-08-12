@@ -29,14 +29,21 @@
 				this.busy = false;
 				this.result_callback = null;
 				this.playSuccess_callback = null;
+				var end_num = 3;
 				this.anim.monitor = function(f,m)
 				{
 					if(_this.callback)
 						_this.callback(f,m);
 					if(!_this.busy)
 					{
+						if(f==end-1&&end_num!=0)
+						{
+							end_num--;
+							m.gotoAndPlay(start);
+						}
 						if(f==end)
 						{
+							end_num = 3;
 							if(_this.cur_status==0)
 								m.gotoAndPlay(fail);
 							else
@@ -109,7 +116,7 @@
 			var help_once = 0;
 			var auto = false;//自动帮投
 			var ernie = null;
-			var rate = 5000000;
+			var rate = 600000;
 			var right_number = Math.floor(Math.random()*rate);
 			var auto_max_time = Math.ceil(rate/100);//根据此设置弹出框
 		//
@@ -139,6 +146,7 @@
 		help_btn.name = "help_btn";
 		var layer = new ANEngine.Layer();
 		var banner = new ANEngine.Sprite(0,15.8,$(window).width()/ANEngine.drawScale,3);
+		banner.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
 
 		function getResult()
 		{
@@ -237,7 +245,7 @@
 				if(f==ernie.get("success_end")||f==ernie.get("fail_end"))
 					start = 0;
 				if(f==ernie.get("fail_end"))
-					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn).delay(100).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);
+					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn).delay(700).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);
 			}
 
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
@@ -402,6 +410,8 @@
 			}
 
 			setInterval(function(){
+				if(zhushu>10000)
+					zhushu_text.text = "已投注："+Math.floor(zhushu/10000)+"万注";
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}
