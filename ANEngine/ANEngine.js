@@ -49,8 +49,9 @@ ANEngine.Scene = function(_canvas)
 	this.canvas = _canvas;
 	this.whFactor = width/height;
 	var canvas = _canvas.getContext("2d");
-	/*var canvas_buffer = document.createElement('canvas');//缓冲
-	var ctx_buffer = canvas_buffer.getContext("2d");*/
+	var canvas_buffer = document.createElement('canvas');//缓冲
+	var ctx_buffer = canvas_buffer.getContext("2d");
+	var cur_buffer_index = 0;
 	var layers = new Array();
 	var backgroud = null;
 	var camera = null;
@@ -141,8 +142,8 @@ ANEngine.Scene = function(_canvas)
 		curTime = new Date().getTime()
 		width = _canvas.width
 		height = _canvas.height;
-		/*canvas_buffer.width = width;
-		canvas_buffer.height = height;*/
+		canvas_buffer.width = width;
+		canvas_buffer.height = height;
 		this.whFactor = width/height;
 		canvas.clearRect(0,0,width,height);
 		if(backgroud!=null)
@@ -157,9 +158,16 @@ ANEngine.Scene = function(_canvas)
 		}
 		//camera X,Y重映射
 		canvas.translate(ANEngine.offsetX*ANEngine.drawScale,ANEngine.offsetY*ANEngine.drawScale);
-		for(var index in layers)
+		if(!ANEngine.EnabledBuffer)
 		{
-			layers[index].drawLayer(canvas);
+			for(var index in layers)
+			{
+				layers[index].drawLayer(canvas);
+			}
+		}
+		else
+		{
+
 		}
 		canvas.translate(-ANEngine.offsetX*ANEngine.drawScale,-ANEngine.offsetY*ANEngine.drawScale);
 		//FPS Text
