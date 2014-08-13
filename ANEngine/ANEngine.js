@@ -119,6 +119,32 @@ ANEngine.Scene = function(_canvas)
 		layer.scene = this;
 	}
 
+	//移除元素
+	this.removeLayer = function(layer)
+	{
+		var index = layers.indexOf(layer);
+		if(index!=-1)
+		{
+			layers.splice(index,1);
+			return layer;
+		}
+
+		return null;
+	}
+
+	this.contains = function(layer)
+	{
+		if(layers.indexOf(layer)!=-1)
+			return true;
+		else
+			return false;
+	}
+
+	this.length = function()
+	{
+		return layers.length;
+	}
+
 	//设置背景
 	this.setBG = function(image)
 	{
@@ -303,6 +329,11 @@ ANEngine.Layer = function()
 			return true;
 		else
 			return false;
+	}
+
+	this.length = function()
+	{
+		return animItemPool.length;
 	}
 
 	//添加可视元素的物理外形
@@ -862,7 +893,7 @@ ANEngine.DisplayObject = function(_x,_y,_width,_height,_rotate)
 		canvas.strokeStyle = "#ff0000";
 		var sprite = _sprite||this;
 		var drawScale = ANEngine.drawScale;
-		var body = sprite.physicalSkin.getPhyAttr().body;
+		var body = sprite.physicalSkin?sprite.physicalSkin.getPhyAttr().body:null;
 		if(body)
 		{
 			if(sprite.physicalSkin.getPhyAttr().shape==ANEngine.physicalEngine.PhysicsAttr.Shape.Box)
@@ -1220,6 +1251,68 @@ ANEngine.Widget.Text = function(text,_x,_y,_width,_height,_rotate)
 		co.text=this.text;
 		co.textStyle=this.textStyle;
 		return co;
+	}
+}
+
+//容器
+ANEngine.Container = function(_x,_y,_width,_height,_rotate,_phyWorld)
+{
+	ANEngine.DisplayObject.call(this,_x,_y,_width,_height,_rotate);
+	//[{item:,index:}...]
+	var display_objects = new Array();
+	this.physicalSkin = new ANEngine.physicalEngine.PhysicalSkin(this);
+
+	//添加可视元素
+	this.addChild = function(animItem)
+	{
+		display_objects.push(animItem);
+		return animItem;
+	}
+
+	//移除元素
+	this.removeChild = function(animItem)
+	{
+		var index = display_objects.indexOf(animItem);
+		if(index!=-1)
+		{
+			display_objects.splice(index,1);
+			return animItem;
+		}
+
+		return null;
+	}
+
+	this.contains = function(animItem)
+	{
+		if(display_objects.indexOf(animItem)!=-1)
+			return true;
+		else
+			return false;
+	}
+
+	this.length = function()
+	{
+		return display_objects.length;
+	}
+
+	this.draw = function(canvas)
+	{
+		var phyAttr = this.physicalSkin.getPhyAttr();
+		if(this.physicalSkin.EnabledPhy()&&phyAttr.body!=null)
+		{
+			this.x = phyAttr.body.GetPosition().x-this.width/2;
+			this.y = phyAttr.body.GetPosition().y-this.height/2;
+			this.rotate = phyAttr.body.GetAngle();
+		}
+		canvas.save();
+		this.preDraw(canvas);
+		canvas.translate(this.x*ANEngine.drawScale,this.y*ANEngine.drawScale);
+		for(var i in display_objects)
+		{
+
+			display_objects[i].draw(canvas);
+		}
+		canvas.restore();
 	}
 }
 
@@ -1650,67 +1743,6 @@ ANEngine.physicalEngine.PhysicalSkin = function(_sprite)
 				phyAttr.fixture.shape = new Box2d.b2CircleShape(radius);
 			}
 		}
-}
-
-//物理容器
-ANEngine.physicalEngine.Container = function(_phyWorld)
-{
-	//[{item:,index:}...]
-	var display_objects = new Array();
-	this.physicalShape = null; 
-	this.phyWorld = _phyWorld;
-
-	this.addChild = function(item,index,sort)
-	{
-		index = index||1;
-		sort = sort==undefined?true:sort;
-		display_objects.push({item:item,index:index});
-		if(sort)
-			display_objects.sort(function(a,b){
-				return b.index-a.index;
-			});
-	}
-
-	this.addChildren = function(children,sort)
-	{
-		display_objects = display_objects.concat(children);
-		sort = sort==undefined?true:sort;
-		if(sort)
-			display_objects.sort(function(a,b){
-				return b.index-a.index;
-			});
-	}
-
-	this.border = function(border_on)
-	{
-		for(var i in display_objects)
-		{
-			display_objects[i].item.drawBorder = border_on;
-		}
-	}
-
-	//暂时保留
-	this.draw = function(canvas)
-	{
-		for(var i in display_objects)
-		{
-			display_objects[i].item.draw(canvas);
-		}
-	}
-
-	this.createPhysicalShape = function(physhape)
-	{
-		this.physicalShape = physhape.initialize(display_objects,this.phyWorld);
-	}
-
-	this.destroyPhysicalShape = function()
-	{
-		if(this.physicalShape)
-		{
-			for(var i in this.physicalShape.joints)
-				this.phyWorld.DestroyJoint(this.physicalShape.joints[i]);
-		}
-	}
 }
 
 //物理形状

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<head>
+	<title>Ernie</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="ANEngine/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="ANEngine/hammer.min.js"></script>
+	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.js"></script>
+	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
+	<script type="text/javascript" src="ANEngine/ANEngine.Util.js"></script>
+</head>
+<body>
+	<script>
+		window.onload = function(){
+		var scene = new ANEngine.Scene(document.getElementById("canvas"));
+		var layer = new ANEngine.Layer();
+		var container = new ANEngine.Container(0,0,10,10);
+		container.drawBorder = true;
+		var container2 = new ANEngine.Container(4,4,10,10);
+		container2.drawBorder = true;
+		container.addChild(container2);
+		layer.addAnimItem(container);
+		ANEngine.Util.Window.FullScreen(scene);
+		var start = false,num=5,spritePool = new Array();
+		for(var i=0;i<num;i++)
+		{
+			spritePool.push(new ANEngine.Sprite(Math.random()*4+5,Math.random()*4+5,2,2));
+		}
+		var loadMonitor = new ANEngine.Util.LoadMonitor();
+		loadMonitor.addImgSource("assets/bird2.png",function(img){
+				for(var i=0;i<num-1;i++)
+				{                                                                                                                 
+					spritePool[i].setChartlet(img);
+					container.addChild(spritePool[i]);
+				}
+				spritePool[num-1].x = 4;
+				spritePool[num-1].y = 4;
+				container2.addChild(spritePool[num-1]);
+				scene.addLayer(layer);
+				start = true;
+		});
+		setInterval(function(){
+			if(start)
+			{
+				/*for(var i=0;i<num-1;i++)
+				{
+					spritePool[i].rotate += .6;
+				}*/
+				container.x += .1;
+				container.y += .06;
+				container.rotate += .1;
+				container2.rotate -= .05;
+				ANEngine.render(scene);
+			}
+		},1000/ANEngine.fps);
+	}
+	</script>
+	<canvas id="canvas" style="position:absolute;left:0;top:0;">Your browser does not support the HTML5 canvas tag.</canvas>
+</body>
