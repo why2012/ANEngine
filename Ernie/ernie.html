@@ -16,7 +16,7 @@
 	<script>
 		var Ernie = function()
 			{
-				this.anim = new ANEngine.MovieClip(-2,-.7,15,14.5);
+				this.anim = new ANEngine.MovieClip(.5,1.9,10,11.2);
 				var _default = 1;
 				var start = 2;
 				var end = 16;
@@ -29,7 +29,7 @@
 				this.busy = false;
 				this.result_callback = null;
 				this.playSuccess_callback = null;
-				var end_num = 3;
+				var end_num = 12;
 				this.anim.monitor = function(f,m)
 				{
 					if(_this.callback)
@@ -43,7 +43,7 @@
 						}
 						if(f==end)
 						{
-							end_num = 3;
+							end_num = 12;
 							if(_this.cur_status==0)
 								m.gotoAndPlay(fail);
 							else
@@ -67,12 +67,12 @@
 
 				this.setSrc = function(img,json)
 				{
-					this.anim.setSpriteSheet(img,json,24);
+					this.anim.setSpriteSheet(img,json,60);
 				}
 
 				this.setSec = function(imgs)
 				{
-					this.anim.setImageSequence(imgs,24);
+					this.anim.setImageSequence(imgs,60);
 					this.anim.useSequencePic = true;
 				}
 
@@ -135,7 +135,8 @@
 		price_text.textStyle = result_text_style;
 		var cover = new ANEngine.Sprite(0,0,100,100);//cover.drawBorder = true;
 
-		var start_game = new ANEngine.Sprite(3,13.6,4.5,1.5);//开始游戏
+		var start_x = 3,start_y = 13.6;
+		var start_game = new ANEngine.Sprite(3,10,4.5,1.5);//开始游戏
 		var conti_game = new ANEngine.Sprite(3,13.6,4.5,1.5);//继续投注
 		var conti_btn = new ANEngine.Sprite(3.5,13.6,4.5,1.5);//继续自己投
 		var help_btn = new ANEngine.Sprite(5.9,13.6,4.5,1.5);//中彩帮投
@@ -147,6 +148,7 @@
 		help_btn.name = "help_btn";
 		var layer = new ANEngine.Layer();
 		var banner = new ANEngine.Sprite(0,15.8,$(window).width()/ANEngine.drawScale,3);
+		var x = new ANEngine.Sprite(banner.x+banner.width-.9,banner.y+.1,.9,.9);
 		banner.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
 
 		function getResult()
@@ -222,17 +224,17 @@
 			ANEngine.Util.Window.FullScreen(scene);
 			scene.addLayer(layer);
 			ernie = new Ernie();//ernie.anim.drawBorder = true;
+			ernie.anim.alpha = 0;
 			//Text
-			layer.addAnimItem(start_game);
 			layer.addAnimItem(zhushu_text);
-			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了啊，让中彩汇来帮你吧！"];
-			notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",2,1.7,0,1.1);
+			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了啊，让中彩汇来帮你吧！"];var notice_text_i = 0;
+			notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",2,1.9,0,1.1);
 			notice.alpha = 0;
 
 			var textStyle = new ANEngine.Widget.TextStyle();
 			textStyle.strokeStyle = "green";
-			textStyle.fillStyle = "#8B95C8";
-			textStyle.font = "20px 微软雅黑";
+			textStyle.fillStyle = "#000";
+			textStyle.font = "25px 方正姚体";
 			textStyle.textBaseline = "hanging";
 			zhushu_text.textStyle = textStyle;
 			var notice_style = textStyle.Clone();
@@ -253,7 +255,9 @@
 					start = 0;
 				if(f==ernie.get("fail_end"))
 				{
-					notice.text = notice_text[Math.floor(Math.random()*5)];
+					notice.text = notice_text[notice_text_i++];
+					if(notice_text_i>=notice_text.length)
+						notice_text_i = 0;
 					notice.animation.animate({alpha:1},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);/*.delay(700).animate({alpha:0},300,ANEngine.Animation.TweenMode.Quart,ANEngine.Animation.EasingMode.EaseIn);*/
 				}
 			}
@@ -272,16 +276,18 @@
 			loadMonitor.addImgSource("assets/popup_high_250.png");
 			loadMonitor.addImgSource("assets/popup_low_250.png");
 			loadMonitor.addImgSource("assets/banner.jpg");
+			loadMonitor.addImgSource("assets/close.png");
 			var sec = new Array();
 			for(var i=1;i<=24;i++)
 				if(i<10)
-					sec.push("assets/png_sequence_low/Ernie000"+i+".png");
+					sec.push("assets/png_sequence/Ernie000"+i+".png");
 				else
-					sec.push("assets/png_sequence_low/Ernie00"+i+".png");
+					sec.push("assets/png_sequence/Ernie00"+i+".png");
 			loadMonitor.addImgSequence("ernie",sec,function(imgs,items){ernie.setSec(imgs)});
-			loadMonitor.addImgSource("assets/bg.png",function(img){
+			loadMonitor.addImgSource("assets/bg1.png",function(img){
 				scene.setBG(img);
 			});
+			loadMonitor.addImgSource("assets/bg2.png");
 
 			loadMonitor.onprogress = function(cur,t)
 			{
@@ -293,6 +299,7 @@
 				//ernie.anim.drawBorder = true;
 				//ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
 				layer.addAnimItem(ernie.anim);
+				layer.addAnimItem(start_game);
 				layer.addAnimItem(notice);
 				//start_game
 				start_game.setChartlet(sources["assets/start_game_up.png"].item);
@@ -302,6 +309,9 @@
 				//banner
 				banner.setChartlet(sources["assets/banner.jpg"].item);
 				layer.addAnimItem(banner);
+				layer.addAnimItem(x);
+				x.setChartlet(sources["assets/close.png"].item);
+				x.addEvent("mouseup",function(e){layer.removeAnimItem(banner);layer.removeAnimItem(e.target)});
 				var game_btn_down = sources["assets/start_game_down.png"].item;
 				var game_btn_up = sources["assets/start_game_up.png"].item;
 				var game_down_func = function(e){e.target.setChartlet(game_btn_down);};
@@ -342,7 +352,11 @@
 					//开始按钮切换
 					if(started==0)
 					{
+						scene.setBG(sources["assets/bg2.png"].item);
 						started = 1;
+						ernie.anim.alpha = 1;
+						start_game.x = start_x;
+						start_game.y = start_y;
 						game_btn_down = sources["assets/conti_game_down.png"].item;
 						game_btn_up = sources["assets/conti_game_up.png"].item;
 						layer.removeAnimItem(start_game);
