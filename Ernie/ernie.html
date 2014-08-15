@@ -16,7 +16,7 @@
 	<script>
 		var Ernie = function()
 			{
-				this.anim = new ANEngine.MovieClip(.5,1.9,10,11.2);
+				this.anim = new ANEngine.MovieClip(.5,1.9,10,11.5);
 				var _default = 1;
 				var start = 2;
 				var end = 16;
@@ -116,17 +116,18 @@
 			var help_once = 0;
 			var auto = false;//自动帮投
 			var ernie = null;
-			var rate = 300000;
+			var rate = 500000;
 			var right_number = Math.floor(Math.random()*rate);
 			var auto_max_time = Math.ceil(rate/3);//根据此设置弹出框
 		//
+		var layer = new ANEngine.Layer();
 
-		var again_btn = new ANEngine.Sprite(.5,8.6,5.5,1.13);//again_btn.drawBorder = true;
-		var proud_btn = new ANEngine.Sprite(6.1,8.6,5.5,1.16);//proud_btn.drawBorder = true;
-		var close_popup_btn = new ANEngine.Sprite(10.3,2,1.3,1.2);//close_popup_btn.drawBorder = true;
-		var popup_box = new ANEngine.Sprite(.5,2,11.14,7.8);
-		var zhushu_result_text = new ANEngine.Widget.Text(0,5.1,2.65,0,.5);
-		var price_text = new ANEngine.Widget.Text(0,6,3.9,0,.5);
+		var again_btn = new ANEngine.Sprite(.9,9.8,4.2,1.3);//again_btn.drawBorder = true;
+		var proud_btn = new ANEngine.Sprite(5.43,9.8,4.2,1.3);//proud_btn.drawBorder = true;
+		//var close_popup_btn = new ANEngine.Sprite(10.3,2,1.3,1.2);//close_popup_btn.drawBorder = true;
+		var popup_box = new ANEngine.Sprite(.96,1.8,8.9,7.2);
+		var zhushu_result_text = new ANEngine.Widget.Text(0,3.7,3.7,0,.5);
+		var price_text = new ANEngine.Widget.Text(0,7.4,3.7,0,.5);
 		var result_text_style = new ANEngine.Widget.TextStyle();
 		result_text_style.fillStyle = "black";
 		result_text_style.textBaseline = "hanging";
@@ -134,22 +135,27 @@
 		zhushu_result_text.textStyle = result_text_style;
 		price_text.textStyle = result_text_style;
 		var cover = new ANEngine.Sprite(0,0,100,100);//cover.drawBorder = true;
+		var link_text = new ANEngine.Sprite(2,7.3,6.3,.7);
 
-		var start_x = 3,start_y = 13.6;
+		var start_x = 3.2,start_y = 13.6;
 		var start_game = new ANEngine.Sprite(3,10,4.5,1.5);//开始游戏
-		var conti_game = new ANEngine.Sprite(3,13.6,4.5,1.5);//继续投注
+		var conti_game = new ANEngine.Sprite(3.2,13.6,4.5,1.5);//继续投注
 		var conti_btn = new ANEngine.Sprite(3.5,13.6,4.5,1.5);//继续自己投
 		var help_btn = new ANEngine.Sprite(5.9,13.6,4.5,1.5);//中彩帮投
-		var zhushu_text= new ANEngine.Widget.Text("已投注：0",3.7,.7,0,1.1);
+		var zhushu_text= new ANEngine.Widget.Text("0",7.2,.5,0,1.1);
+		zhushu_text.alpha = 0;
 		var notice;
 		start_game.name = "start_game";
 		conti_game.name = "conti_game";
 		conti_btn.name = "conti_btn";
 		help_btn.name = "help_btn";
-		var layer = new ANEngine.Layer();
 		var banner = new ANEngine.Sprite(0,15.8,$(window).width()/ANEngine.drawScale,3);
 		var x = new ANEngine.Sprite(banner.x+banner.width-.9,banner.y+.1,.9,.9);
 		banner.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
+		link_text.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
+		var head = new ANEngine.Sprite(-1,-3.5,$(window).width()/ANEngine.drawScale+2.5,10);
+		head.alpha = 0;
+		layer.addAnimItem(head);
 
 		function getResult()
 		{
@@ -184,6 +190,10 @@
 			price_text.text = "";
 			zhushu_result_text.text = zhushu;
 			price_text.text = zhushu*2;
+			if(zhushu>=10000)
+				zhushu_result_text.text = Math.floor(zhushu/10000)+"万注";
+			if(zhushu>=5000)
+				price_text.text = Math.floor(zhushu/5000)+"万元";
 			layer.addAnimItem(start_game);
 			layer.addAnimItem(cover);
 			layer.addAnimItem(popup_box);
@@ -191,20 +201,22 @@
 			layer.addAnimItem(price_text);
 			layer.addAnimItem(again_btn);
 			layer.addAnimItem(proud_btn);
-			layer.addAnimItem(close_popup_btn);
+			layer.addAnimItem(link_text);
+			//layer.addAnimItem(close_popup_btn);
 		}
 
 		function popup_hide(e)
 		{
 			zhushu = 0;
-			zhushu_text.text = "已投注：0";
+			zhushu_text.text = "0";
 			layer.removeAnimItem(zhushu_result_text);
 			layer.removeAnimItem(price_text);
 			layer.removeAnimItem(popup_box);
 			layer.removeAnimItem(again_btn);
 			layer.removeAnimItem(proud_btn);
 			layer.removeAnimItem(cover);	
-			layer.removeAnimItem(close_popup_btn);
+			layer.removeAnimItem(link_text);
+			//layer.removeAnimItem(close_popup_btn);
 			if(e.target==proud_btn)
 				alert("请点击右上角分享");
 		}
@@ -212,7 +224,7 @@
 		//关闭弹出框
 		again_btn.addEvent("mouseup",popup_hide);
 		proud_btn.addEvent("mouseup",popup_hide);
-		close_popup_btn.addEvent("mouseup",popup_hide);
+		//close_popup_btn.addEvent("mouseup",popup_hide);
 	</script>
 	<script>
 		window.onload = function()
@@ -228,17 +240,17 @@
 			//Text
 			layer.addAnimItem(zhushu_text);
 			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了啊，让中彩汇来帮你吧！"];var notice_text_i = 0;
-			notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",2,1.9,0,1.1);
+			notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",.7,1.9,0,1.1);
 			notice.alpha = 0;
 
 			var textStyle = new ANEngine.Widget.TextStyle();
-			textStyle.strokeStyle = "green";
-			textStyle.fillStyle = "#000";
+			textStyle.fillStyle = "#fff";
 			textStyle.font = "25px 方正姚体";
 			textStyle.textBaseline = "hanging";
 			zhushu_text.textStyle = textStyle;
-			var notice_style = textStyle.Clone();
-			notice.textStyle = notice_style;
+			var textStyle_notice = textStyle.Clone();
+			textStyle_notice.fillStyle = "#000";
+			notice.textStyle = textStyle_notice;
 
 			ernie.callback  =function(f,m)
 			{
@@ -277,6 +289,13 @@
 			loadMonitor.addImgSource("assets/popup_low_250.png");
 			loadMonitor.addImgSource("assets/banner.jpg");
 			loadMonitor.addImgSource("assets/close.png");
+			loadMonitor.addImgSource("assets/again_up.png");
+			loadMonitor.addImgSource("assets/again_down.png");
+			loadMonitor.addImgSource("assets/proud_up.png");
+			loadMonitor.addImgSource("assets/proud_down.png");
+			loadMonitor.addImgSource("assets/link.png");
+			loadMonitor.addImgSource("assets/head.png");
+
 			var sec = new Array();
 			for(var i=1;i<=24;i++)
 				if(i<10)
@@ -301,6 +320,14 @@
 				layer.addAnimItem(ernie.anim);
 				layer.addAnimItem(start_game);
 				layer.addAnimItem(notice);
+				again_btn.setChartlet(sources["assets/again_up.png"].item);
+				proud_btn.setChartlet(sources["assets/proud_down.png"].item);
+				again_btn.addEvent("mousedown",function(e){e.target.setChartlet(sources["assets/again_down.png"].item)});
+				again_btn.addEvent("mouseup",function(e){e.target.setChartlet(sources["assets/again_up.png"].item)});
+				proud_btn.addEvent("mousedown",function(e){e.target.setChartlet(sources["assets/proud_up.png"].item)});
+				proud_btn.addEvent("mouseup",function(e){e.target.setChartlet(sources["assets/proud_down.png"].item)});
+				link_text.setChartlet(sources["assets/link.png"].item);
+				head.setChartlet(sources["assets/head.png"].item);
 				//start_game
 				start_game.setChartlet(sources["assets/start_game_up.png"].item);
 				conti_game.setChartlet(sources["assets/conti_game_up.png"].item);
@@ -342,7 +369,7 @@
 								}
 							}
 						});
-						zhushu_text.text = "已投注："+zhushu;
+						zhushu_text.text = zhushu;
 						start = 1;
 						if(ernie.cur_status==1)
 						{
@@ -353,6 +380,8 @@
 					if(started==0)
 					{
 						scene.setBG(sources["assets/bg2.png"].item);
+						head.alpha = 1;
+						zhushu_text.alpha = 1;
 						started = 1;
 						ernie.anim.alpha = 1;
 						start_game.x = start_x;
@@ -368,7 +397,8 @@
 						game_btn_down = sources["assets/conti_btn_down.png"].item;
 						game_btn_up = sources["assets/conti_btn_up.png"].item;
 						layer.removeAnimItem(conti_game);
-						layer.addAnimItem(conti_btn);
+						if(!layer.contains(conti_btn))
+							layer.addAnimItem(conti_btn);
 						if(!layer.contains(help_btn))
 							layer.addAnimItem(help_btn);
 						conti_btn.x = .77;		
@@ -399,7 +429,7 @@
 								{
 									//ernie.cur_status = 1;
 									zhushu += i+1;
-									zhushu_text.text = "已投注："+zhushu;
+									zhushu_text.text = zhushu;
 									ernie.busy = 0;
 									ernie.playSuccess(function(){
 										if(zhushu<=auto_max_time)
@@ -418,7 +448,7 @@
 							if(help_result==0)
 							{
 								zhushu += num;
-								zhushu_text.text = "已投注："+zhushu;
+								zhushu_text.text = zhushu;
 								setTimeout(auto_func,1)
 							}
 						};
@@ -437,7 +467,7 @@
 
 			setInterval(function(){
 				if(zhushu>10000)
-					zhushu_text.text = "已投注："+Math.floor(zhushu/10000)+"万注";
+					zhushu_text.text = Math.floor(zhushu/10000)+"万注";
 				ANEngine.render(scene);
 			},1000/ANEngine.fps);
 		}

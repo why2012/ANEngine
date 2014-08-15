@@ -232,7 +232,7 @@ ANEngine.Layer = function()
 	}
 
 	this.mouseEventDetector.mousedown = function(e,pos)
-	{//console.log(pos);
+	{console.log(pos);
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
@@ -387,19 +387,30 @@ ANEngine.Event.EventDispatcher = function(_obj)
 
 	this.addEvent = function(name,func)
 	{
-		events[name] = {name:name,func:func};
+		if(!events[name])
+			events[name] = [];
+		events[name].push({name:name,func:func});
 	}
 
-	this.removeEvent = function(name)
+	this.removeEvent = function(name,func)
 	{
-		events[name] = null;
+		if(events[name])
+			for(var e in events[name])
+				if(events[name][e].func==func)
+				{
+					events[name].splice(e,1);
+					break;
+				}
 	}
 
 	this.dispatchEvent = function(event)
 	{
 		if(events[event.name])
 		{
-			events[event.name].func(event);
+			for(var e in events[event.name])
+			{
+				events[event.name][e].func(event);
+			}
 		}
 	}
 }
