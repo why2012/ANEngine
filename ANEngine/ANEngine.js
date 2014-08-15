@@ -224,7 +224,7 @@ ANEngine.Layer = function()
 	{
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
-			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"click"))
+			if(_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"click"))
 				return true;
 		}
 
@@ -235,9 +235,9 @@ ANEngine.Layer = function()
 	{console.log(pos);
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
-			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousedown"))
+			if(_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"mousedown"))
 			{
-				animItemPool[a].mouse_down = true;	
+				animItemPool[a].item.mouse_down = true;	
 				return true;
 			}
 		}
@@ -250,11 +250,11 @@ ANEngine.Layer = function()
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
 			//mouseup事件与鼠标位置无关
-			if(animItemPool[a].mouse_down&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseup"))
+			if(animItemPool[a].item.mouse_down&&_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"mouseup"))
 			{
 				return true;
 			}
-			animItemPool[a].mouse_down = false;
+			animItemPool[a].item.mouse_down = false;
 		}
 
 		return false;
@@ -264,7 +264,7 @@ ANEngine.Layer = function()
 	{
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
-			if(!animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mouseover"))
+			if(!animItemPool[a].item.mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"mouseover"))
 			{
 				return true;
 			}
@@ -277,7 +277,7 @@ ANEngine.Layer = function()
 	{
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
-			if(animItemPool[a].mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemoveout",true))
+			if(animItemPool[a].item.mouse_on_me&&_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"mousemoveout",true))
 			{
 				return true;
 			}
@@ -290,7 +290,7 @@ ANEngine.Layer = function()
 	{
 		for(var a=animItemPool.length-1;a>=0;a--)
 		{
-			if(_this.mouseEventDetector.objIn(animItemPool[a],pos,"mousemove"))
+			if(_this.mouseEventDetector.objIn(animItemPool[a].item,pos,"mousemove"))
 				return true;
 		}
 
@@ -303,9 +303,11 @@ ANEngine.Layer = function()
 	}
 
 	//添加可视元素
-	this.addAnimItem = function(animItem)
+	this.addAnimItem = function(animItem,index)
 	{
-		animItemPool.push(animItem);
+		index = index||1;
+		animItemPool.push({item:animItem,index:index});
+		animItemPool.sort(function(a,b){return a.index-b.index;});
 		animItem.layer = this;
 		return animItem;
 	}
@@ -313,7 +315,13 @@ ANEngine.Layer = function()
 	//移除元素
 	this.removeAnimItem = function(animItem)
 	{
-		var index = animItemPool.indexOf(animItem);
+		var index = -1;
+		for(var i in animItemPool)
+			if(animItemPool[i].item==animItem)
+			{
+				index = i;
+				break;
+			}
 		if(index!=-1)
 		{
 			animItemPool.splice(index,1);
@@ -325,7 +333,14 @@ ANEngine.Layer = function()
 
 	this.contains = function(animItem)
 	{
-		if(animItemPool.indexOf(animItem)!=-1)
+		var index = -1;
+		for(var i in animItemPool)
+			if(animItemPool[i].item==animItem)
+			{
+				index = i;
+				break;
+			}
+		if(index!=-1)
 			return true;
 		else
 			return false;
@@ -374,7 +389,7 @@ ANEngine.Layer = function()
 	{
 		for(var index in animItemPool)
 		{
-			animItemPool[index].draw(canvas);
+			animItemPool[index].item.draw(canvas);
 		}
 	}
 }

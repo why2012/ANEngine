@@ -9,6 +9,13 @@
 </head>
 <body>
 	<script>
+		/*var arr = [{item:"a",index:2},{item:"b",index:1},{item:"c",index:1},{item:"d",index:1},{item:"e",index:1}];
+		arr.sort(function(a,b){return a.index-b.index;});
+		arr.push({item:"f",index:1});
+		arr.sort(function(a,b){return a.index-b.index;});
+		arr.push({item:"g",index:1});
+		arr.sort(function(a,b){return a.index-b.index;});
+		console.log(arr);*/
 		window.onload = function(){
 			$(window).resize(function()
 			{
@@ -32,7 +39,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
-			var container = new ANEngine.physicalEngine.Container(scene.phyWorld);
+			//var container = new ANEngine.physicalEngine.Container(scene.phyWorld);
 			camera.bind(particle);
 			camera.bindObjOffsetX = 20;
 			camera.bindObjOffsetY = 10;
@@ -154,10 +161,10 @@
 				sprite.physicalSkin.setPhysics(phyData);
 				layer.addAnimItem(sprite);
 				sprite.physicalSkin.addToPhyWorld();
-				container.addChild(sprite,1,false);
+				//container.addChild(sprite,1,false);
 			}
-			container.border(true);
-			container.createPhysicalShape(bridge);
+			//container.border(true);
+			//container.createPhysicalShape(bridge);
 			//container.destroyPhysicalShape();
 			//spriteC.alpha(.5);
 			//spriteC.scale(.5,.5);
