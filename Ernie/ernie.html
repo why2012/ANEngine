@@ -143,7 +143,7 @@
 		var start_x = 3.2,start_y = 13.6;
 		var start_game = new ANEngine.Sprite(3,10,4.5,1.5);//开始游戏
 		var conti_game = new ANEngine.Sprite(3.2,13.6,4.5,1.5);//继续投注
-		var conti_btn = new ANEngine.Sprite(3.5,13.6,4.5,1.5);//继续自己投
+		var conti_btn = new ANEngine.Sprite(.77,13.6,4.5,1.5);//继续自己投
 		var help_btn = new ANEngine.Sprite(5.9,13.6,4.5,1.5);//中彩帮投
 		var zhushu_text= new ANEngine.Widget.Text("0",6.8,.5,0,1.1);
 		zhushu_text.alpha = 0;
@@ -180,7 +180,6 @@
 			help_once=0;
 			started = 0;
 			start = 0;
-			conti_btn.x = 3;
 			notice.text = "";
 			layer.removeAnimItem(conti_game);
 			layer.removeAnimItem(conti_btn);
@@ -235,14 +234,35 @@
 	<script>
 		window.onload = function()
 		{
+			ernie = new Ernie();//ernie.anim.drawBorder = true;
+			ernie.anim.alpha = 0;
+			if(window.screen.availHeight<1160)
+			{
+				ernie.anim.width *= .7;ernie.anim.x += 1.4;
+				ernie.anim.height *= .7;
+				popup_box.y -= 1.5;
+				again_btn.y -= 1.5;
+				proud_btn.y -= 1.5;
+				link_text.y -= 1.5;
+				zhushu_result_text.y -= 1.5;
+				price_text.y -= 1.5;
+				start_game.width *= .8;start_game.height *= .8;
+				start_y -= 3;start_x +=start_game.width/2-1.5;
+				conti_btn.width *= .8;conti_btn.height *= .8;
+				conti_btn.y -= 3;conti_btn.x += 1;
+				conti_game.width *= .8;conti_game.height *=.8;
+				conti_game.y -=3;conti_game.x +=conti_game.width/2-1.5;
+				help_btn.width *=.8;help_btn.height *=.8;
+				help_btn.y -=3;help_btn.x +=help_btn.width/2-2;
+				banner.y -=3;
+			}
 			ANEngine.Platform = "";//"desktop" "mobile"
 			//ANEngine.SpecialPlatform = "IOS";
 			ANEngine.Scene.ShowFPS = false;
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			ANEngine.Util.Window.FullScreen(scene);
 			scene.addLayer(layer);
-			ernie = new Ernie();//ernie.anim.drawBorder = true;
-			ernie.anim.alpha = 0;
+			
 			//Text
 			layer.addAnimItem(zhushu_text);
 			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了啊，让中彩汇来帮你吧！"];var notice_text_i = 0;
@@ -409,8 +429,7 @@
 						if(!layer.contains(conti_btn))
 							layer.addAnimItem(conti_btn);
 						if(!layer.contains(help_btn))
-							layer.addAnimItem(help_btn);
-						conti_btn.x = .77;		
+							layer.addAnimItem(help_btn);		
 					}
 				}
 
