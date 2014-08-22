@@ -32,7 +32,7 @@
 				this.busy = false;
 				this.result_callback = null;
 				this.playSuccess_callback = null;
-				var end_num = 12;
+				var end_num = 8;
 				this.anim.monitor = function(f,m)
 				{
 					if(_this.callback)
@@ -46,7 +46,7 @@
 						}
 						if(f==end)
 						{
-							end_num = 12;
+							end_num = 8;
 							if(_this.cur_status==0)
 								m.gotoAndPlay(fail);
 							else
@@ -70,12 +70,12 @@
 
 				this.setSrc = function(img,json)
 				{
-					this.anim.setSpriteSheet(img,json,60);
+					this.anim.setSpriteSheet(img,json,64);
 				}
 
 				this.setSec = function(imgs)
 				{
-					this.anim.setImageSequence(imgs,60);
+					this.anim.setImageSequence(imgs,64);
 					this.anim.useSequencePic = true;
 				}
 
@@ -122,6 +122,8 @@
 			var rate = 500000;
 			var right_number = Math.floor(Math.random()*rate);
 			var auto_max_time = Math.ceil(rate/3);//根据此设置弹出框
+
+			var descContent = "注意：玩前请洗手！分享朋友圈，看看谁是中国好手气。";
 		//
 		var layer = new ANEngine.Layer();
 
@@ -141,7 +143,7 @@
 		var link_text = new ANEngine.Sprite(2,7.3,6.3,.7);
 
 		var start_x = 3.2,start_y = 13.6;
-		var start_game = new ANEngine.Sprite(3,10,4.5,1.5);//开始游戏
+		var start_game = new ANEngine.Sprite(3.2,13.6,4.5,1.5);//开始游戏
 		var conti_game = new ANEngine.Sprite(3.2,13.6,4.5,1.5);//继续投注
 		var conti_btn = new ANEngine.Sprite(.77,13.6,4.5,1.5);//继续自己投
 		var help_btn = new ANEngine.Sprite(5.9,13.6,4.5,1.5);//中彩帮投
@@ -154,13 +156,11 @@
 		help_btn.name = "help_btn";
 		var banner_width = $(window).width()/ANEngine.drawScale-1;
 		var banner = new ANEngine.Sprite(.5,15.5,banner_width,banner_width*0.175);
-		banner.alpha = 0;
 		var x = new ANEngine.Sprite(banner.x+banner.width-.9,banner.y+.1,.9,.4);
-		x.alpha = 0;
 		banner.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
 		link_text.addEvent("mouseup",function(){location.href="http://m.zch168.com/activity?action=8yi&sid=800147";});
 		var head = new ANEngine.Sprite(-1,-3.5,$(window).width()/ANEngine.drawScale+2.5,10);
-		head.alpha = 0;head.name="head";
+		head.name="head";
 		layer.addAnimItem(head);
 
 		function getResult()
@@ -198,7 +198,30 @@
 			if(zhushu>=10000)
 				zhushu_result_text.text = Math.round(zhushu/10000)+"万";
 			if(zhushu>=5000)
-				price_text.text = Math.round(zhushu/5000)+"万";
+				price_text.text = Math.round(zhushu/10000)*2+"万";
+
+			var _str;
+			var percent;
+			_str = zhushu*2;
+			if(zhushu>5000)
+				_str = Math.round(zhushu/10000)*2;
+
+			if(zhushu<6000)
+				percent = "99%";
+			else if(zhushu<10000)
+				percent = "85%";
+			else if(zhushu<100000)
+				percent = "50%";
+			else if(zhushu<300000)
+				percent = "30%";
+			else if(zhushu<=500000)
+				percent = "20%";
+			else if(zhushu>500000)
+				percent = "10%";
+			else if(zhushu>1000000)
+				percent = "1%";
+			descContent = "我花了"+_str+"万，拿下了彩票500万大奖，打败了"+percent+"人，谁能比我手更红";
+
 			layer.addAnimItem(start_game,3);
 			layer.addAnimItem(cover,4);
 			layer.addAnimItem(popup_box,4);
@@ -235,8 +258,19 @@
 		window.onload = function()
 		{
 			ernie = new Ernie();//ernie.anim.drawBorder = true;
-			ernie.anim.alpha = 0;
-			if(window.screen.availHeight<1160)
+			if(window.screen.availHeight==548)
+			{//alert("这是5s");
+				//ernie.anim.width +=.2;ernie.anim.height += .2;
+				//ernie.anim.x -= .1;ernie.anim.y -= .1;
+				x.alpha = 0;
+				banner.y -= .3;
+				start_y -= .3;
+				start_game.y -= .3;
+				conti_game.y -= .3;
+				conti_btn.y -= .3;
+				help_btn.y -= .3;
+			}
+			else if(window.screen.availHeight<1000)
 			{
 				ernie.anim.width *= .7;ernie.anim.x += 1.4;
 				ernie.anim.height *= .7;
@@ -246,26 +280,33 @@
 				link_text.y -= 1.5;
 				zhushu_result_text.y -= 1.5;
 				price_text.y -= 1.5;
-				start_game.width *= .8;start_game.height *= .8;
+				start_game.width *= .8;start_game.height *= .64;
+				start_game.y -=3;start_game.x +=start_game.width/2-1.5;
 				start_y -= 3;start_x +=start_game.width/2-1.5;
-				conti_btn.width *= .8;conti_btn.height *= .8;
+				conti_btn.width *= .8;conti_btn.height *= .64;
 				conti_btn.y -= 3;conti_btn.x += 1;
-				conti_game.width *= .8;conti_game.height *=.8;
+				conti_game.width *= .8;conti_game.height *=.64;
 				conti_game.y -=3;conti_game.x +=conti_game.width/2-1.5;
-				help_btn.width *=.8;help_btn.height *=.8;
+				help_btn.width *=.8;help_btn.height *=.64;
 				help_btn.y -=3;help_btn.x +=help_btn.width/2-2;
 				banner.y -=3;
 			}
+			else
+			{
+				zhushu_text.x += 1;
+			}
+			
 			ANEngine.Platform = "";//"desktop" "mobile"
 			//ANEngine.SpecialPlatform = "IOS";
 			ANEngine.Scene.ShowFPS = false;
+			//ANEngine.fps = 100;	
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			ANEngine.Util.Window.FullScreen(scene);
 			scene.addLayer(layer);
 			
 			//Text
 			layer.addAnimItem(zhushu_text);
-			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了啊，让中彩汇来帮你吧！"];var notice_text_i = 0;
+			var notice_text = ["一次就想中，确定梦醒了？","成功就要坚持住，站直撸！~","再一再二，再接再厉！","中500万的机率，你懂的……","没耐心了？让中彩票帮你投！"];var notice_text_i = 0;
 			notice =  new ANEngine.Widget.Text("别灰心，几率你懂得",1.5,2.1,0,1.1);
 			notice.alpha = 0;
 
@@ -326,13 +367,13 @@
 			var sec = new Array();
 			for(var i=1;i<=24;i++)
 				if(i<10)
-					sec.push("assets/png_sequence/Ernie000"+i+".png");
+					sec.push("assets/png_sequence_low/Ernie000"+i+".png");
 				else
-					sec.push("assets/png_sequence/Ernie00"+i+".png");
+					sec.push("assets/png_sequence_low/Ernie00"+i+".png");
 			loadMonitor.addImgSequence("ernie",sec,function(imgs,items){ernie.setSec(imgs)});
-			loadMonitor.addImgSource("assets/bg1.png",function(img){
+			/*loadMonitor.addImgSource("assets/bg1.png",function(img){
 				scene.setBG(img);
-			});
+			});*/
 			loadMonitor.addImgSource("assets/bg2.png");
 
 			loadMonitor.onprogress = function(cur,t)
@@ -344,6 +385,7 @@
 			{
 				//ernie.anim.drawBorder = true;
 				//ernie.setSrc(sources["assets/ernie.png"].item,sources["assets/ernie.json"].item);
+				scene.setBG(sources["assets/bg2.png"].item);
 				layer.addAnimItem(ernie.anim,2);
 				layer.addAnimItem(start_game,3);
 				layer.addAnimItem(notice);
@@ -372,6 +414,9 @@
 				var game_up_func = function(e)
 				{
 					e.target.setChartlet(game_btn_up);
+				}
+				var game_click_func = function(e)
+				{
 					if(auto)return;
 					//每轮结果
 					if(start==0)
@@ -406,7 +451,6 @@
 					//开始按钮切换
 					if(started==0)
 					{
-						scene.setBG(sources["assets/bg2.png"].item);
 						head.alpha = 1;
 						banner.alpha = 1;
 						zhushu_text.alpha = 1;
@@ -437,6 +481,9 @@
 				var help_down_func = function(e)
 				{
 					e.target.setChartlet(sources["assets/help_down.png"].item);
+				};
+				var help_click_func = function(e)
+				{
 					if(help_once==0&&start==0)
 					{
 						auto = true;
@@ -485,12 +532,16 @@
 				};
 				start_game.addEvent("mousedown",game_down_func);
 				start_game.addEvent("mouseup",game_up_func);
+				start_game.addEvent("click",game_click_func);
 				conti_game.addEvent("mousedown",game_down_func);
 				conti_game.addEvent("mouseup",game_up_func);
+				conti_game.addEvent("click",game_click_func);
 				conti_btn.addEvent("mousedown",game_down_func);
 				conti_btn.addEvent("mouseup",game_up_func);
+				conti_btn.addEvent("click",game_click_func);
 				help_btn.addEvent("mousedown",help_down_func);
 				help_btn.addEvent("mouseup",help_up_func);
+				help_btn.addEvent("click",help_click_func);
 			}
 
 			setInterval(function(){
@@ -503,13 +554,12 @@
 	<script>
 var imgUrl = 'http://why2012.gotoip55.com/myEngine/Ernie/favicon.png';
 var lineLink = 'http://why2012.gotoip55.com/myEngine/Ernie';
-var descContent = "注意：玩前请洗手！分享朋友圈，看看谁是中国好手气。";
 var shareTitle = '看看你这辈子有没有中500万彩票的命';
 var appid = 'wxc9937e3a66af6dc8';
 
 function shareFriend() {
     WeixinJSBridge.invoke('sendAppMessage',{
-                            "appid": appid,
+                            //"appid": appid,
                             "img_url": imgUrl,
                             "img_width": "64",
                             "img_height": "64",

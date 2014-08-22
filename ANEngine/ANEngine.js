@@ -486,10 +486,19 @@ ANEngine.Event.MouseEventDetector = function(dom)
 	var mouseup = function(e)
 	{
 		var _xy=e;
-		if(e.targetTouches)
-			_xy = e.targetTouches[0];
+		if(e.changedTouches)
+		{
+			//_xy = e.targetTouches[0];
+			_xy = e.changedTouches[0];
+		}
+			
 		if(_this.mouseup)
 			_this.mouseup(e,scaledPos(_xy));
+		if(e.changedTouches)
+		{
+			if(_this.onclick)
+				_this.onclick(e,scaledPos(_xy));
+		}
 	}
 
 	var mousemove = function(e)

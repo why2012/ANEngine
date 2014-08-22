@@ -16,7 +16,7 @@
 	<script>
 		window.onload = function()
 		{
-			ANEngine.Platform = "mobile";
+			//ANEngine.Platform = "mobile";
 			var scene = new ANEngine.Scene(document.getElementById("canvas"));
 			var layer = new ANEngine.Layer();
 			scene.addLayer(layer);
@@ -84,11 +84,14 @@
 				btn.pivotY = btn.height/2;
 				btn.x = 5;
 				btn.animation.animate({scaleW:1,scaleH:1},500,ANEngine.Animation.TweenMode.Circ,ANEngine.Animation.EasingMode.EaseIn)
-				btn.addEvent("mouseup",function(e){
+				/*btn.addEvent("mouseup",function(e){
 					e.target.setChartlet(sources["../assets/wood.png"].item);
-				});
+				});*/
 				btn.addEvent("mousedown",function(e){
 					e.target.setChartlet(sources["../assets/glass.png"].item);
+				});
+				btn.addEvent("click",function(e){
+					e.target.setChartlet(sources["../assets/wood.png"].item);
 				});
 				layer.addAnimItem(mvc);
 				layer.addAnimItem(text1);
