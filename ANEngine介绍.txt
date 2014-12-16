@@ -1,0 +1,1 @@
+引擎代码在ANEngine里面，主代码是ANEngine.js。使用了物理引擎的demo为demo.html。游戏项目代码在Ernie里面,入口是index.php,也可以直接运行ernie.html，游戏是为微信平台开发的，所以推荐由微信浏览器或手机浏览器打开，或者用微信访问线上的版本http://caipiao.caicaiapp.com/。ernie.html的第370行可以调整引擎的默认平台

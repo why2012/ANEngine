@@ -49,10 +49,12 @@
 				{
 					spritePool[i].rotate += .6;
 				}*/
-				container.x += .1;
-				container.y += .06;
-				container.rotate += .1;
-				container2.rotate -= .05;
+				//container.x += .1;
+				//container.y += .06;
+				container.scaleW -= .01;
+				container.scaleH -= .02;
+				//container.rotate += .1;
+				//container2.rotate -= .05;
 				ANEngine.render(scene);
 			}
 		},1000/ANEngine.fps);

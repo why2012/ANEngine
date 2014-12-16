@@ -1344,7 +1344,7 @@ ANEngine.Container = function(_x,_y,_width,_height,_rotate,_phyWorld)
 		canvas.translate(this.x*ANEngine.drawScale,this.y*ANEngine.drawScale);
 		for(var i in display_objects)
 		{
-
+			display_objects[i].parent_scale = {w:this.scaleW,h:this.scaleH,x:this.x+this.pivotX,y:this.y+this.pivotY};
 			display_objects[i].draw(canvas);
 		}
 		canvas.restore();
