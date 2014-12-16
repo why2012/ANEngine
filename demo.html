@@ -39,7 +39,7 @@
 			var spriteD = new ANEngine.Sprite(28,8,12,2,Math.PI/2);
 			var spriteE = new ANEngine.Sprite(6,0,2,2);
 			var particle = new ANEngine.MovieClip(15,2.5,3,3);
-			//var container = new ANEngine.physicalEngine.Container(scene.phyWorld);
+			//var container = new ANEngine.Container(0,0,10,10);
 			camera.bind(particle);
 			camera.bindObjOffsetX = 20;
 			camera.bindObjOffsetY = 10;
@@ -154,6 +154,7 @@
 			//container.addChildren([{item:spriteA,index:1},{item:spriteC,index:1},{item:movieClip,index:1},{item:particle,index:1}]);
 			var nodeNum = 60,_x=-10,_y=0;
 			phyData.density = 10;
+			var bridgeItems = new Array();
 			for(var i=0;i<nodeNum;i++)
 			{
 				var sprite = new ANEngine.Sprite(_x,_y,1,.5);
@@ -161,11 +162,11 @@
 				sprite.physicalSkin.setPhysics(phyData);
 				layer.addAnimItem(sprite);
 				sprite.physicalSkin.addToPhyWorld();
+				sprite.drawBorder = true;
+				bridgeItems.push({item:sprite});
 				//container.addChild(sprite,1,false);
 			}
-			//container.border(true);
-			//container.createPhysicalShape(bridge);
-			//container.destroyPhysicalShape();
+			bridge.initialize(bridgeItems,scene.phyWorld);
 			//spriteC.alpha(.5);
 			//spriteC.scale(.5,.5);
 			//layer.removeAnimItem(spriteC);
