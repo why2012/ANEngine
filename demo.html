@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <head>
 	<title>ANEngine</title>
-	<script type="text/javascript" src="ANEngine/jquery-2.0.2.min.js"></script>
-	<script type="text/javascript" src="ANEngine/hammer.min.js"></script>
-	<script type="text/javascript" src="ANEngine/Box2dWeb-2.1.a.3.js"></script>
-	<script type="text/javascript" src="ANEngine/ANEngine.js"></script>
-	<script type="text/javascript" src="ANEngine/ANEngine.Util.js"></script>
+	<script type="text/javascript" src="./ANEngine/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="./ANEngine/hammer.min.js"></script>
+	<script type="text/javascript" src="./ANEngine/Box2dWeb-2.1.a.3.js"></script>
+	<script type="text/javascript" src="./ANEngine/ANEngine.js"></script>
+	<script type="text/javascript" src="./ANEngine/ANEngine.Util.js"></script>
 </head>
 <body>
 	<script>
@@ -63,35 +63,35 @@
 
 			var loadMonitor = new ANEngine.Util.LoadMonitor();
 			//设置背景贴图
-			loadMonitor.addImgSource("assets/bird2.png",function(img){
+			loadMonitor.addImgSource("./assets/bird2.png",function(img){
 				spriteA.setChartlet(img);
 			});
-			loadMonitor.addImgSource("assets/bird1.png",function(img){
+			loadMonitor.addImgSource("./assets/bird1.png",function(img){
 				spriteC.setChartlet(img);
 				layer.addAnimItem(spriteC.Clone());
 			});
-			loadMonitor.addImgSource("assets/glass.png",function(img){
+			loadMonitor.addImgSource("./assets/glass.png",function(img){
 				spriteB.setChartlet(img);
 			});
-			loadMonitor.addImgSource("assets/wood.png",function(img){
+			loadMonitor.addImgSource("./assets/wood.png",function(img){
 				spriteD.setChartlet(img);
 			});
-			loadMonitor.addImgSource("assets/bird3.png",function(img){
+			loadMonitor.addImgSource("./assets/bird3.png",function(img){
 				spriteE.setChartlet(img);
 			});
-			loadMonitor.addImgSource("assets/eff.png",function(img){
-				loadMonitor.addOtherSource("assets/eff.xml",{},function(xml){
+			loadMonitor.addImgSource("./assets/eff.png",function(img){
+				loadMonitor.addOtherSource("./assets/eff.xml",{},function(xml){
 					particle.setSpriteSheet(img,ANEngine.Util.MovieClip.XmlToJson(xml),24);
 					layer.addAnimItem(particle.Clone());	
 				},"xml");
 			});
-			loadMonitor.addImgSource("assets/zombie1.png",function(img){
-				loadMonitor.addJsonSource("assets/zombie1.json",function(json){
+			loadMonitor.addImgSource("./assets/zombie1.png",function(img){
+				loadMonitor.addJsonSource("./assets/zombie1.json",function(json){
 					movieClip.setSpriteSheet(img,json,24);
 					//console.log(movieClip.totalFrame());
 				});
 			});
-			loadMonitor.addImgSource("assets/bg.png",function(img){
+			loadMonitor.addImgSource("./assets/bg.png",function(img){
 				scene.setBG(img);
 			});
 
